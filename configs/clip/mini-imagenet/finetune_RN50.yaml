@@ -1,0 +1,55 @@
+dataset: meta-mini-imagenet
+train_set_args:
+  split: meta-train
+  # split: meta_train_limited10
+  # split: meta_train_limited_class32
+  size: 224           # added for CLIP
+  transform: flip
+  n_batch: 1000
+  n_episode: 1
+  n_way: 3
+  n_shot: 25
+  n_query: 175
+  deterministic: True  # whether set images in dataset to be deterministic in each epoch
+val_set_args:
+  split: meta-val
+  size: 224           # added for CLIP
+  transform: null
+  n_batch: 200
+  n_episode: 1
+  n_way: 5
+  n_shot: 1
+  n_query: 10
+
+encoder: RN50
+
+# path: ./save/clip/meta-mini-imagenet_RN50_fs-centroid_5y1s_finetune_clip_old
+# ckpt: max-va.pth
+
+classifier: fs-centroid
+classifier_args:
+  temp: 10.
+  learn_temp: True
+
+optimizer: sgd
+optimizer_args:
+  lr: 1.e-8 # 0.001
+  momentum: 0.99
+  weight_decay: 0 # 5.e-4
+
+########### limited number of images per class we get access to
+# save_path: ./save/meta_train_limited/limited10/clip # added for meta_train_limited
+
+########### limited class we get access to, multiple run
+# save_path: ./save/meta_limited_classes/class64/run3
+# seed: 2
+
+########### vary few shot images per task
+# save_path: ./save/few_shot_images/shot5/run3
+
+########### task, samples
+save_path: ./save/task_samples/task200
+
+
+V: 1
+n_epochs: 10

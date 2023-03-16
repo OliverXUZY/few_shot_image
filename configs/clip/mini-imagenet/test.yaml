@@ -1,0 +1,66 @@
+dataset: meta-mini-imagenet
+test_set_args:
+  split: meta-test
+  # size: 84
+  size: 224                 # add for clip
+  transform: null
+  n_batch: 150
+  n_episode: 4
+  n_way: 5
+  n_shot: 1
+  n_query: 10
+
+##  test pretrain CLIP ViT-B32 freeze + append train mlp head + meta NC as classifier
+# path: ./save/clip/meta-mini-imagenet_ViT-B32_fs-centroid_5y1s_train_wrapper_head_clip 
+# path: ./save/clip/meta-mini-imagenet_ViT-B32_fs-centroid_5y1s_train_wrapper_head_continue
+# path: ./save/clip/meta-mini-imagenet_ViT-B32_TwoLayersNN_fs-centroid_5y1s_train_wrapper_head_clip
+# path: ./save/clip/meta-mini-imagenet_ViT-B32_twoLayersResNet_fs-centroid_5y1s_train_wrapper_head_clip
+# path: ./save/clip/meta-mini-imagenet_ViT-B32_fs-centroid_5y1s_finetune_clip
+
+
+### meta limited
+# path: ./save/meta_train_limited/clip/meta-mini-imagenet_ViT-B32_fs-centroid_5y1s_finetune
+# path: ./save/meta_train_limited/clip/meta-mini-imagenet_ViT-B32_twoLayersResNet_fs-centroid_5y1s_train_wrapper_head
+# path: ./save/meta_train_limited/clip/meta-mini-imagenet_ViT-B32_TwoLayersNN_fs-centroid_5y1s_train_wrapper_head
+
+### 50
+# path: ./save/meta_train_limited/limited50/clip/meta-mini-imagenet_ViT-B32_fs-centroid_5y1s_finetune
+# path: ./save/meta_train_limited/limited50/clip/meta-mini-imagenet_ViT-B32_TwoLayersNN_fs-centroid_5y1s_train_wrapper_head
+# path: ./save/meta_train_limited/limited50/clip/meta-mini-imagenet_ViT-B32_twoLayersResNet_fs-centroid_5y1s_train_wrapper_head
+
+
+### 20
+# path: ./save/meta_train_limited/limited20/clip/meta-mini-imagenet_ViT-B32_fs-centroid_5y1s_finetune
+# path: ./save/meta_train_limited/limited20/clip/meta-mini-imagenet_ViT-B32_TwoLayersNN_fs-centroid_5y1s_train_wrapper_head
+# path: ./save/meta_train_limited/limited20/clip/meta-mini-imagenet_ViT-B32_twoLayersResNet_fs-centroid_5y1s_train_wrapper_head
+
+### 10
+# path: ./save/meta_train_limited/limited10/clip/meta-mini-imagenet_ViT-B32_fs-centroid_5y1s_finetune
+# path: ./save/meta_train_limited/limited10/clip/meta-mini-imagenet_ViT-B32_TwoLayersNN_fs-centroid_5y1s_train_wrapper_head
+# path: ./save/meta_train_limited/limited10/clip/meta-mini-imagenet_ViT-B32_twoLayersResNet_fs-centroid_5y1s_train_wrapper_head
+
+##  test pretrain CLIP RN50 freeze + append train mlp head + meta NC as classifier
+# path: ./save/meta-mini-imagenet_RN50_fs-centroid_5y1s_train_wrapper_head_clip
+
+
+### meta_limited_class
+# path: ./save/meta_limited_classes/class32/meta-mini-imagenet_ViT-B32_fs-centroid_5y1s_finetune
+# path: ./save/meta_limited_classes/class64/run3/meta-mini-imagenet_ViT-B32_fs-centroid_5y1s_finetune
+
+
+### few_shot_images
+# path: ./save/few_shot_images/shot5/run3/meta-mini-imagenet_ViT-B32_fs-centroid_5y5s_finetune
+
+### task_sample
+path: ./save/task_samples/task5000/meta-mini-imagenet_ViT-B32_fs-centroid_5y25s_1000size
+
+
+ckpt: max-va.pth
+# ckpt: epoch-last.pth
+
+classifier: fs-centroid
+classifier_args:
+  temp: 10.
+
+V: 1
+n_epochs: 10
