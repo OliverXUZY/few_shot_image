@@ -1,0 +1,60 @@
+dataset: meta-mini-imagenet
+train_set_args: 
+  split: meta-train
+  size: 224           # added for ViT
+  transform: flip
+  n_batch: 200
+  n_episode: 2
+  n_way: 5
+  n_shot: 1
+  n_query: 10
+  # root: '../datasets/mini-imagenet'  ## add if we train using mini-imagenet
+  # deterministic: True  # whether set images in dataset to be deterministic in each epoch
+val_set_args:
+  split: meta-val
+  size: 224           # added for ViT
+  transform: null
+  n_batch: 200
+  n_episode: 2
+  n_way: 5
+  n_shot: 1
+  n_query: 10
+  # root: '../datasets/mini-imagenet'  ## add if we train using mini-imagenet
+  # deterministic: True  # whether set images in dataset to be deterministic in each epoch
+
+
+################################### encoder
+################## original encoder
+### clip
+# encoder: ViT-B32
+# encoder: RN50
+
+### moco v2
+encoder: ResNet50_mocov2
+encoder_args: 
+  ckpt_path: ../pretrained_model/simclr_weights/moco_v2_800ep_pretrain.pth.tar
+
+
+### continue to tune encoder
+path: ./save/moco_v2/meta-mini-imagenet_ResNet50_mocov2_fs-centroid_5y1s_55size
+ckpt: epoch-last.pth
+start_epoch_from: 20
+
+classifier: fs-centroid
+classifier_args:
+  temp: 10.
+  learn_temp: True
+
+optimizer: sgd
+optimizer_args:
+  lr: 1.e-8 # 0.001
+  momentum: 0.99
+  weight_decay: 0
+
+
+save_path: ./save/moco_v2
+
+V: 1
+n_epochs: 10
+save_epoch: 10
+
