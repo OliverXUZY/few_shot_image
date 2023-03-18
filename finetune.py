@@ -75,16 +75,19 @@ def main(config):
   ##### Model and Optimizer #####
 
   if config.get('path'):
-    utils.log("continue to tune {}".format(config['encoder']))
+    start_epoch_from = config['start_epoch_from']
+    utils.log("continue to tune {} from {}".format(config['encoder'], start_epoch_from))
     assert os.path.exists(os.path.join(config['path'], config['ckpt']))
     ckpt = torch.load(os.path.join(config['path'], config['ckpt']))
     enc = encoders.load(ckpt)
   else:
+    start_epoch_from = 0
+    config['encoder_args'] = config.get('encoder_args') or dict()
+    enc = encoders.make(config['encoder'], **config['encoder_args'])
     ckpt = {
       'encoder': config['encoder'],
-      'encoder_args': dict(),
+      'encoder_args':  config['encoder_args'],
     }
-    enc = encoders.make(config['encoder'])
 
   config['classifier_args'] = config.get('classifier_args') or dict()
   config['classifier_args']['in_dim'] = enc.get_out_dim()
@@ -224,13 +227,13 @@ def main(config):
 
     # formats output
     log_str = '[{}/{}] train {:.4f}(C)|{:.2f}'.format(
-      str(epoch), str(config['n_epochs']), aves['tl'], aves['ta'])
-    writer.add_scalars('loss', {'train': aves['tl']}, epoch)
-    writer.add_scalars('acc', {'train': aves['ta']}, epoch)
+      str(epoch + start_epoch_from), str(config['n_epochs'] + start_epoch_from), aves['tl'], aves['ta'])
+    writer.add_scalars('loss', {'train': aves['tl']}, epoch + start_epoch_from)
+    writer.add_scalars('acc', {'train': aves['ta']}, epoch + start_epoch_from)
     if eval_val:
       log_str += ', val {:.4f}(C)|{:.2f}'.format(aves['vl'], aves['va'])
-      writer.add_scalars('loss', {'val': aves['vl']}, epoch)
-      writer.add_scalars('acc', {'val': aves['va']}, epoch)
+      writer.add_scalars('loss', {'val': aves['vl']}, epoch + start_epoch_from)
+      writer.add_scalars('acc', {'val': aves['va']}, epoch + start_epoch_from)
 
     log_str += ', {} {}/{}'.format(t_epoch, t_elapsed, t_estimate)
     utils.log(log_str)
@@ -266,7 +269,7 @@ def main(config):
       max_va = aves['va']
       torch.save(ckpt, os.path.join(ckpt_path, 'max-va.pth'))
     if config.get('save_epoch') and epoch % config['save_epoch'] == 0:
-      torch.save(ckpt, os.path.join(ckpt_path, 'epoch-{}.pth'.format(epoch)))
+      torch.save(ckpt, os.path.join(ckpt_path, 'epoch-{}.pth'.format(epoch + start_epoch_from)))
 
     writer.flush()
 
