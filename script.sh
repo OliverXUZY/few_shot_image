@@ -20,4 +20,7 @@ source ~/.bashrc
 
 # python finetune.py --config=configs/clip/mini-imagenet/finetune_ViT.yaml
 # python finetune.py --config=configs/clip/mini-imagenet/finetune_RN50.yaml
-python test.py --config=configs/clip/mini-imagenet/test.yaml
+# python test.py --config=configs/clip/mini-imagenet/test.yaml
+
+python finetune.py --config=configs/moco_v2/mini-imagenet/finetune.yaml
+
