@@ -4,7 +4,7 @@ train_set_args:
   # split: meta_train_limited10
   # split: meta_train_limited_class32
   size: 224           # added for CLIP
-  transform: flip
+  transform: clip
   n_batch: 1000
   n_episode: 1
   n_way: 3

@@ -52,9 +52,8 @@ test_set_args:
 # path: ./save/few_shot_images/shot5/run3/meta-mini-imagenet_ViT-B32_fs-centroid_5y5s_finetune
 
 ### task_sample
-path: ./save/task_samples/task5000/meta-mini-imagenet_ViT-B32_fs-centroid_5y25s_1000size
-
-
+# path: ./save/task_samples/task5000/meta-mini-imagenet_ViT-B32_fs-centroid_5y25s_1000size
+path: ./save/task_samples/make_up_paper/meta-mini-imagenet_ViT-B32_fs-centroid_5y1s_50m_800M
 ckpt: max-va.pth
 # ckpt: epoch-last.pth
 

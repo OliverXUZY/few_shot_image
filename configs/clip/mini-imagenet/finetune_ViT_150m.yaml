@@ -5,11 +5,11 @@ train_set_args:
   # split: meta_train_limited_class32
   size: 224           # added for ViT
   transform: clip
-  n_batch: 600
+  n_batch: 0
   n_episode: 1
   n_way: 5
-  n_shot: 1
-  n_query: 39
+  n_shot: 3
+  n_query: 27
   deterministic: True  # whether set images in dataset to be deterministic in each epoch
 val_set_args:
   split: meta-val
@@ -55,7 +55,7 @@ optimizer_args:
 # save_path: ./save/task_samples/task5000
 
 ########### M,m trend
-save_path: ./save/vary_num_shot
+save_path: ./save/task_samples/make_up_paper_150m_600M
 
 save_epoch: 5
 V: 1

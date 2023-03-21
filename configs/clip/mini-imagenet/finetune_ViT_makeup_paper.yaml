@@ -5,11 +5,11 @@ train_set_args:
   # split: meta_train_limited_class32
   size: 224           # added for ViT
   transform: clip
-  n_batch: 600
+  n_batch: 800
   n_episode: 1
   n_way: 5
-  n_shot: 1
-  n_query: 39
+  n_shot: 2
+  n_query: 18
   deterministic: True  # whether set images in dataset to be deterministic in each epoch
 val_set_args:
   split: meta-val
@@ -25,10 +25,12 @@ val_set_args:
 
 encoder: ViT-B32
 
-# path: ./save/task_samples/task5000/meta-mini-imagenet_ViT-B32_fs-centroid_5y25s_1000size
-# path: ./save/clip/meta-mini-imagenet_RN50_fs-centroid_5y1s_finetune_clip
+### continue to tune encoder
+path: ./save/task_samples/make_up_paper/meta-mini-imagenet_ViT-B32_fs-centroid_5y2s_100m_600M
+ckpt: max-va.pth
+start_epoch_from: 10
 
-ckpt: epoch-last.pth
+
 
 classifier: fs-centroid
 classifier_args:
@@ -55,7 +57,7 @@ optimizer_args:
 # save_path: ./save/task_samples/task5000
 
 ########### M,m trend
-save_path: ./save/vary_num_shot
+save_path: ./save/task_samples/make_up_paper
 
 save_epoch: 5
 V: 1
