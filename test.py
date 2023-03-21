@@ -123,8 +123,15 @@ if __name__ == '__main__':
   parser.add_argument('--gpu', 
                       help='gpu device number', 
                       type=str, default='0')
+  parser.add_argument('--path', 
+                      help='the path to saved model', 
+                      type=str)
   args = parser.parse_args()
   config = yaml.load(open(args.config, 'r'), Loader=yaml.FullLoader)
+
+  if args.path:  # customized saved path here
+    config['path'] = "./save/vary_num_shot/{}".format(args.path)
+    utils.log("load model from path: {}".format(config['path']))
 
   if len(args.gpu.split(',')) > 1:
     config['_parallel'] = True

@@ -114,10 +114,12 @@ def main(config):
                                   ))
   timer_elapsed, timer_epoch = utils.Timer(), utils.Timer()
 
-  ckpt_name = '{}_{}_{}_{}y{}s_{}size'.format(
+  ckpt_name = '{}_{}_{}_{}y{}s_{}m_{}M'.format(
     config['dataset'], ckpt['encoder'], config['classifier'],
     config['train_set_args']['n_way'], config['train_set_args']['n_shot'], 
-    (config['train_set_args']['n_shot'] + config['train_set_args']['n_query'])*config['train_set_args']['n_way'])
+    (config['train_set_args']['n_shot'] + config['train_set_args']['n_query']) * config['train_set_args']['n_way'],
+    config['train_set_args']['n_batch']
+  )
   if args.tag is not None:
     ckpt_name += '[' + args.tag + ']'
 
@@ -287,9 +289,38 @@ if __name__ == '__main__':
   parser.add_argument('--efficient', 
                       help='if True, enables gradient checkpointing',
                       action='store_true')
+  parser.add_argument('--n_batch_train',
+                      help='modify batch train num batch',
+                      type=int)
+  parser.add_argument('--n_shot',
+                      help='num shot',
+                      type=int)
+  parser.add_argument('--sample_per_task',
+                      help='sample_per_task',
+                      type=int)
+  parser.add_argument('--path', 
+                      help='the path to saved model', 
+                      type=str)
+  
   args = parser.parse_args()
   config = yaml.load(open(args.config, 'r'), Loader=yaml.FullLoader)
 
+  if args.n_batch_train:
+    config['train_set_args']['n_batch'] = int(args.n_batch_train)
+  if args.n_shot:
+    config['train_set_args']['n_shot'] = int(args.n_shot)
+  if args.sample_per_task:
+    config['train_set_args']['n_query'] = int(args.sample_per_task/config['train_set_args']['n_way'] - args.n_shot)
+  if args.path:
+    config['path'] = "./save/task_samples/make_up_paper/{}".format(args.path)
+    utils.log("load model from path: {}".format(config['path']))
+    
+  utils.log('{}y{}s_{}m_{}M'.format(
+    config['train_set_args']['n_way'], 
+    config['train_set_args']['n_shot'], 
+    (config['train_set_args']['n_shot'] + config['train_set_args']['n_query']) * config['train_set_args']['n_way'],
+    config['train_set_args']['n_batch']
+    ))
   if len(args.gpu.split(',')) > 1:
     config['_parallel'] = True
     config['_gpu'] = args.gpu
