@@ -86,6 +86,14 @@ def get_transform(name, size, statistics=None):
       transforms.ToTensor(),
       transforms.Normalize(**statistics),
     ])
+  elif name == 'clip':
+    return transforms.Compose([
+        transforms.Resize(size, interpolation=transforms.InterpolationMode.BICUBIC),
+        transforms.CenterCrop(size),
+        _convert_image_to_rgb,
+        transforms.ToTensor(),
+        transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711)),
+    ])
   elif  name is None:
     return transforms.Compose([
       transforms.Resize(size),
@@ -94,3 +102,6 @@ def get_transform(name, size, statistics=None):
     ])
   else:
     raise ValueError('invalid transform: {}'.format(name))
+
+def _convert_image_to_rgb(image):
+    return image.convert("RGB")
