@@ -1,0 +1,24 @@
+dataset: vl-meta-mini-imagenet
+
+test_set_args:
+  root: /srv/home/zxu444/datasets/mini-imagenet
+  split: meta-test
+  size: 224                 # add for clip
+  transform: null
+  n_batch: 150
+  n_episode: 4
+  n_way: 5
+  n_query: 15
+  # deterministic: True
+
+
+encoder: ViT-B32
+# path: ./save/task_samples/make_up_paper/meta-mini-imagenet_ViT-B32_fs-centroid_5y1s_50m_800M
+# ckpt: max-va.pth
+# ckpt: epoch-last.pth
+
+classifier: fs-centroid
+classifier_args:
+  temp: 10.
+
+n_epochs: 10
