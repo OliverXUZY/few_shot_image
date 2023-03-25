@@ -348,7 +348,6 @@ def main():
                         acc = utils.accuracy(logits, val_y)
                         aves['vl'].update(loss.item())
                         aves['va'].update(acc[0])
-                        va_lst.append(acc[0].item())
             for k, avg in aves.items():
                 aves[k] = avg.item()
                 trlog[k].append(aves[k])
