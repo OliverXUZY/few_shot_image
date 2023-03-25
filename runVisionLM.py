@@ -19,6 +19,44 @@ import utils.optimizers as optimizers
 
 import clip
 
+templates = ['a photo of a {}',
+             'itap of a {}.',
+            'a bad photo of the {}.',
+            'a origami {}.',
+            'a photo of the large {}.',
+            'a {} in a video game.',
+            'art of the {}.',
+            'a photo of the small {}.']
+
+def text_encoder(shot_names, clip_model):
+    '''
+    shot_names: list with length Y, each element of list is a tuple with E names
+    # [('vase', 'Alaskan Malamute', 'electric guitar', 'mixing bowl'),
+    # ('red king crab', 'scoreboard', 'Dalmatian', 'Golden Retriever'),
+    # ('trifle', 'lion', 'vase', 'red king crab'),
+    # ('black-footed ferret', 'crate', 'nematode', 'front curtain'),
+    # ('crate', 'Golden Retriever', 'bookstore', 'Dalmatian')]
+
+    clip_model: model.encode_text in CLIP model (enc.model)
+    '''
+    s = []
+    for template in templates:
+        token_ep = list(map(
+            lambda x: clip_model.encode_text(
+                torch.concat(
+                    [clip.tokenize(template.format(name)) for name in x]   # each element is [1,77] tokens for one sentence
+                    ).cuda(non_blocking=True)                               # 4 eps ('vase', 'Alaskan Malamute', 'electric guitar', 'mixing bowl') for tokens for one of Y class [E,77] [4, 77]
+                ),        # 4 eps for text features for one of Y class  [E,D] [4, 512]
+            shot_names
+            ))            # list with length Y, each element is above [E,D]
+
+        textfea_ep = torch.stack(token_ep)      # [Y,E,D] [5, 4, 512]
+        s.append(textfea_ep)
+    s = torch.stack(s)                      # [T=7,Y,E,D] 8 templates        [8, 5, 4, 512]
+    s = s.transpose(0,2)                    # [E,Y,T,D]      [4, 5, 8, 512]
+    s /= s.norm(dim = -1, keepdim=True)     # normalize
+
+    return s
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Finetune a vision encoder on vision language model")
@@ -127,11 +165,11 @@ def main():
     clf = classifiers.make(config['classifier'], **config['classifier_args'])
 
     ##### Optimizer and ckpt #####
+    ckpt_name = None
     if args.do_train:
-        ckpt_name = '{}_{}_{}_{}y_{}m_{}M'.format(
+        ckpt_name = '{}_{}_{}_{}y_{}M'.format(
             config['dataset'], ckpt['encoder'], config['classifier'],
             config['train_set_args']['n_way'], 
-            (config['train_set_args']['n_shot'] + config['train_set_args']['n_query']) * config['train_set_args']['n_way'],
             config['train_set_args']['n_batch']
         )
 
@@ -159,7 +197,8 @@ def main():
     
     
     if args.do_test:
-        ckpt_name = "vl_zero_shot"
+        if not ckpt_name: # zero shot model
+            ckpt_name = "vl_zero_shot"
 
         utils.log("done test model")
 
@@ -197,19 +236,8 @@ def main():
                     q = q.view(1, E, YQ, -1)                # [QV = 1, E, Y * Q, D]
 
                     ### encode text
-                    token_ep = list(map(
-                        lambda x: enc.model.encode_text(
-                            torch.concat(
-                                [clip.tokenize(f"a photo of a {name}") for name in x]   # each element is [1,77] tokens for one sentence
-                                ).cuda(non_blocking=True)                               # 4 eps for tokens for first of Y class [E,77] [4, 77]
-                            ),        # 4 eps for text features for one of Y class  [E,D] [4, 512]
-                        shot_names
-                        ))            # list with length Y, each element is above [E,D]
-
-                    textfea_ep = torch.stack(token_ep)      # [Y,E,D] [5, 4, 512]
-                    textfea_ep = textfea_ep.transpose(0, 1) # [E,Y,D] [4, 5, 512]
-                    E,Y,D = textfea_ep.shape
-                    s = textfea_ep.view(1,E,Y,1,1,D)        # [SV = 1, E, Y, S, 1, D] to align with shape in clf
+                    s = text_encoder(shot_names, enc.model)
+                    s = s.unsqueeze(3).unsqueeze(0)         # [SV = 1, E, Y, S, V = 1, D]  [1, 4, 5, 7, 1, 512])
 
                     logits = clf(s, q)                      # [1, E, Y*Q, Y]   [1, 4, 75, 5]
                     
@@ -275,19 +303,9 @@ def main():
 
                 ### encode text, does not update text encoder
                 with torch.no_grad():
-                    token_ep = list(map(
-                        lambda x: enc.model.encode_text(
-                            torch.concat(
-                                [clip.tokenize(f"a photo of a {name}") for name in x]   # each element is [1,77] tokens for one sentence
-                                ).cuda(non_blocking=True)                               # 4 eps for tokens for first of Y class [E,77] [4, 77]
-                            ),        # 4 eps for text features for one of Y class  [E,D] [4, 512]
-                        shot_names
-                        ))            # list with length Y, each element is above [E,D]
+                    s = text_encoder(shot_names, enc.model)
+                    s = s.unsqueeze(3).unsqueeze(0)         # [SV = 1, E, Y, S, V = 1, D]  [1, 4, 5, 7, 1, 512])
 
-                textfea_ep = torch.stack(token_ep)      # [Y,E,D] [5, 4, 512]
-                textfea_ep = textfea_ep.transpose(0, 1) # [E,Y,D] [4, 5, 512]
-                E,Y,D = textfea_ep.shape
-                s = textfea_ep.view(1,E,Y,1,1,D)        # [SV = 1, E, Y, S, 1, D] to align with shape in clf
 
                 logits = clf(s, q)                      # [1, E, Y*Q, Y]   [1, 4, 75, 5]
                 
@@ -320,19 +338,8 @@ def main():
                         q = q.view(1, E, YQ, -1)                # [QV = 1, E, Y * Q, D]
 
                         ### encode text
-                        token_ep = list(map(
-                            lambda x: enc.model.encode_text(
-                                torch.concat(
-                                    [clip.tokenize(f"a photo of a {name}") for name in x]   # each element is [1,77] tokens for one sentence
-                                    ).cuda(non_blocking=True)                               # 4 eps for tokens for first of Y class [E,77] [4, 77]
-                                ),        # 4 eps for text features for one of Y class  [E,D] [4, 512]
-                            shot_names
-                            ))            # list with length Y, each element is above [E,D]
-
-                        textfea_ep = torch.stack(token_ep)      # [Y,E,D] [5, 4, 512]
-                        textfea_ep = textfea_ep.transpose(0, 1) # [E,Y,D] [4, 5, 512]
-                        E,Y,D = textfea_ep.shape
-                        s = textfea_ep.view(1,E,Y,1,1,D)        # [SV = 1, E, Y, S, 1, D] to align with shape in clf
+                        s = text_encoder(shot_names, enc.model)
+                        s = s.unsqueeze(3).unsqueeze(0)         # [SV = 1, E, Y, S, V = 1, D]  [1, 4, 5, 7, 1, 512])
 
                         logits = clf(s, q)                      # [1, E, Y*Q, Y]   [1, 4, 75, 5]
                         
