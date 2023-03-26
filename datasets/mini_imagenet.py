@@ -196,3 +196,173 @@ class UnsupMetaMiniImageNet(MiniImageNet):
       
     images = torch.cat(images, dim=0)      # [(S+Q)*Y, n_view = V, C,H,W] [55, 2, 3, 84, 84]
     return images
+  
+
+########################################## vision language dataset
+from torchvision.datasets import ImageFolder
+idx_to_name ={ 
+"test": {0: 'nematode',
+ 1: 'red king crab',
+ 2: 'Golden Retriever',
+ 3: 'Alaskan Malamute',
+ 4: 'Dalmatian',
+ 5: 'African wild dog',
+ 6: 'lion',
+ 7: 'ant',
+ 8: 'black-footed ferret',
+ 9: 'bookstore',
+ 10: 'crate',
+ 11: 'cuirass',
+ 12: 'electric guitar',
+ 13: 'hourglass',
+ 14: 'mixing bowl',
+ 15: 'school bus',
+ 16: 'scoreboard',
+ 17: 'front curtain',
+ 18: 'vase',
+ 19: 'trifle'},
+
+ "val":{0: 'goose',
+ 1: 'Ibizan Hound',
+ 2: 'Alaskan tundra wolf',
+ 3: 'meerkat',
+ 4: 'rhinoceros beetle',
+ 5: 'cannon',
+ 6: 'cardboard box / carton',
+ 7: 'catamaran',
+ 8: 'combination lock',
+ 9: 'garbage truck',
+ 10: 'gymnastic horizontal bar',
+ 11: 'iPod',
+ 12: 'miniskirt',
+ 13: 'missile',
+ 14: 'poncho',
+ 15: 'coral reef'},
+
+ "train": {0: 'house finch',
+ 1: 'American robin',
+ 2: 'triceratops',
+ 3: 'green mamba',
+ 4: 'harvestman',
+ 5: 'toucan',
+ 6: 'jellyfish',
+ 7: 'dugong',
+ 8: 'Treeing Walker Coonhound',
+ 9: 'Saluki',
+ 10: 'Gordon Setter',
+ 11: 'Komondor',
+ 12: 'Boxer',
+ 13: 'Tibetan Mastiff',
+ 14: 'French Bulldog',
+ 15: 'Newfoundland dog',
+ 16: 'Miniature Poodle',
+ 17: 'Arctic fox',
+ 18: 'ladybug',
+ 19: 'three-toed sloth',
+ 20: 'rock beauty fish',
+ 21: 'aircraft carrier',
+ 22: 'trash can',
+ 23: 'barrel',
+ 24: 'beer bottle',
+ 25: 'carousel',
+ 26: 'bell or wind chime',
+ 27: 'clogs',
+ 28: 'cocktail shaker',
+ 29: 'dishcloth',
+ 30: 'dome',
+ 31: 'filing cabinet',
+ 32: 'fire screen',
+ 33: 'frying pan',
+ 34: 'hair clip',
+ 35: 'holster',
+ 36: 'lipstick',
+ 37: 'oboe',
+ 38: 'pipe organ',
+ 39: 'parallel bars',
+ 40: 'pencil case',
+ 41: 'photocopier',
+ 42: 'prayer rug',
+ 43: 'fishing casting reel',
+ 44: 'slot machine',
+ 45: 'snorkel',
+ 46: 'solar thermal collector',
+ 47: 'spider web',
+ 48: 'stage',
+ 49: 'tank',
+ 50: 'tile roof',
+ 51: 'tobacco shop',
+ 52: 'unicycle',
+ 53: 'upright piano',
+ 54: 'wok',
+ 55: 'split-rail fence',
+ 56: 'sailboat',
+ 57: 'traffic or street sign',
+ 58: 'consomme',
+ 59: 'hot dog',
+ 60: 'orange',
+ 61: 'cliff',
+ 62: 'bolete',
+ 63: 'corn cob'}
+}
+@register('vl-meta-mini-imagenet') 
+class VLMetaMiniImageNet(Dataset):
+  def __init__(self, root, split='train', size=224, transform=None,
+               n_batch=200, n_episode=4, n_way=5, n_query=15, deterministic = False):
+    """
+    Args:
+      root (str): root path of dataset.
+      split (str): dataset split. Default: 'train'
+      size (int): image resolution. Default: 84
+      transform (str): data augmentation. Default: None
+    """
+    super(VLMetaMiniImageNet, self).__init__()
+
+    split_dict = {'train': 'train',        # standard train
+                  'val': 'val',            # standard val
+                  'test': 'test',          # standard test
+                  'meta-train': 'train',   # meta-train
+                  'meta-val': 'val',                   # meta-val
+                  'meta-test': 'test',                 # meta-test
+                 }
+    split_tag = split_dict.get(split) or split
+    split_dir = '{}/{}'.format(root, split_tag)
+    print(split_dir)
+    assert os.path.isdir(split_dir)
+    
+    self.statistics = {'mean': [0.471, 0.450, 0.403],
+                       'std':  [0.278, 0.268, 0.284]}
+    self.transform = get_transform(transform, size, self.statistics)
+
+    self.dataset = ImageFolder(root = split_dir, transform = self.transform)
+    self.label_idx_to_name = idx_to_name[split_tag]
+
+    ### sampling part
+    self.catlocs = np.arange(len(self.dataset)).reshape(-1,600)
+
+    self.n_class = self.catlocs.shape[0]
+    self.n_batch = n_batch
+    self.n_episode = n_episode
+    self.n_way = n_way
+    self.n_query = n_query
+    self.deterministic = deterministic
+  
+  def __len__(self):
+    return self.n_batch * self.n_episode
+
+  def __getitem__(self, index):
+    if self.deterministic:
+      np.random.seed(index) 
+    q = self.n_query
+    query = tuple()
+
+    cats = np.random.choice(self.n_class, self.n_way, replace=False)
+    label_names = []
+    for c in cats:
+      label_names.append(self.label_idx_to_name[c])
+      idx = np.random.choice(self.catlocs[c], q, replace=False) 
+      c_query = torch.stack([self.dataset[i][0] for i in idx])  # [q, C, H ,W] [3, 3, 224, 224]
+      query += (c_query,)
+    query = torch.cat(query)    # [QV, Y * Q, C, H, W] 
+    cats = torch.from_numpy(cats)
+    
+    return query, cats, label_names

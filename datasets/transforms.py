@@ -4,6 +4,13 @@ import torch
 import torchvision.transforms as transforms
 from PIL import ImageFilter
 
+from PIL import Image
+try:
+    from torchvision.transforms import InterpolationMode
+    BICUBIC = InterpolationMode.BICUBIC
+except ImportError:
+    BICUBIC = Image.BICUBIC
+
 
 class MultiViewTransform(object):
   def __init__(self, transform, n_view=2):
@@ -88,7 +95,7 @@ def get_transform(name, size, statistics=None):
     ])
   elif name == 'clip':
     return transforms.Compose([
-        transforms.Resize(size, interpolation=transforms.InterpolationMode.BICUBIC),
+        transforms.Resize(size, interpolation=BICUBIC),
         transforms.CenterCrop(size),
         _convert_image_to_rgb,
         transforms.ToTensor(),
