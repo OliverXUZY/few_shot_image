@@ -1,5 +1,8 @@
 # Vision Language Model
 
+## Datasets
+Download datasets with class names: [here](https://lyy.mpi-inf.mpg.de/mtl/download/Lmzjm9tX.html)
+
 ## Result
 * Evaluation: Nearest-centroids for few-shot task evaluation. In each task, we sample 10 classes, each class contains text features 10-query images.
 * Text encoder: 1 template `'a photo of a {class name}'`.
