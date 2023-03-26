@@ -4,4 +4,4 @@ from . import resnet12
 from . import resnet18
 from . import wrapper
 from . import ViT
-from . import clip_resnet
+from . import pretrained_resnet
