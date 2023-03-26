@@ -33,9 +33,9 @@
 
 #### 15-way accuracy (%) on *tiered-ImageNet*
 | Backbone   | Task(M) |shot images|query images|image per task(m)|Accuracy|
-|------------|--------|-----------|------------|-----------------|-|
-|CLIP-ViT_B32| 0      | None      | None       |None             |59.55 +- 0.21|
-|            | 200    |1          | 7          |120               |-|
+|------------|--------|-----------|------------|------------------|-|
+|CLIP-ViT_B32| 0      | None      | None       |None              |59.55 +- 0.21|
+|            | 200    |1          | 7          |120               |69.25 +- 0.18 |
 
 
 #### Examples
