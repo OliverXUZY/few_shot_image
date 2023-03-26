@@ -1,6 +1,16 @@
 # few_shot_image
 
-## Examples
+## Vision Tasks
+
+### Running the code
+
+**Datasets**
+- [miniImageNet](https://drive.google.com/file/d/1fJAK5WZTjerW7EWHHQAR9pRJVNg1T1Y7/view?usp=sharing) (courtesy of [Spyros Gidaris](https://github.com/gidariss/FewShotWithoutForgetting))
+- [tieredImageNet](https://drive.google.com/open?id=1nVGCTd9ttULRXFezh4xILQ9lUkg0WZCG) (courtesy of [Kwonjoon Lee](https://github.com/kjunelee/MetaOptNet))
+- [ImageNet-800](http://image-net.org/challenges/LSVRC/2012/)
+
+
+#### Examples
 
 * run one job
 ```
