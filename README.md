@@ -9,6 +9,27 @@
 - [tieredImageNet](https://drive.google.com/open?id=1nVGCTd9ttULRXFezh4xILQ9lUkg0WZCG) (courtesy of [Kwonjoon Lee](https://github.com/kjunelee/MetaOptNet))
 - [ImageNet-800](http://image-net.org/challenges/LSVRC/2012/)
 
+### result
+#### 5-way accuracy (%) on *mini-ImageNet*
+| Backbone  | Task(M) |shot images|query images|image per task(m)|Accuracy|
+|------------|--------|-----------|------------|-----------------|-|
+|CLIP-ViT_B32| 0      | None      | None       |None             |83.03 +- 0.24|
+|            | 200    |1          | 7          |40               |88.53 +- 0.22|
+|            |        |5          | 35         |200              |89.50 +- 0.20|
+|            |        |25         | 175        |1000             |89.93 +- 0.20|
+|            | 1000   |1          | 7          |40               |89.37 +- 0.20|
+|            |        |5          | 35         |200              |90.81 +- 0.19|
+|            |        |25         | 175        |1000             |90.97 +- 0.19|
+|            | 5000   |1          | 7          |40               |89.95 +- 0.20|
+|            |        |5          | 35         |200              |90.94 +- 0.19|
+|            |        |25         | 175        |1000             |91.16 +- 0.18|
+
+
+#### 10-way accuracy (%) on *tiered-ImageNet*
+| Backbone   | Task(M) |shot images|query images|image per task(m)|Accuracy|
+|------------|--------|-----------|------------|-----------------|-|
+|CLIP-ViT_B32| 0      | None      | None       |None             |-|
+
 
 #### Examples
 
