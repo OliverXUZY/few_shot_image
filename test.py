@@ -137,7 +137,7 @@ if __name__ == '__main__':
   config = yaml.load(open(args.config, 'r'), Loader=yaml.FullLoader)
 
   if args.path:  # customized saved path here
-    config['path'] = "./save/vary_num_shot/{}".format(args.path)
+    config['path'] = "./save/{}/Mm_trend/{}".format(config['dataset'].replace('meta-', ''),args.path)
     utils.log("load model from path: {}".format(config['path']))
 
   if len(args.gpu.split(',')) > 1:
