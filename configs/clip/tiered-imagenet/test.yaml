@@ -1,0 +1,24 @@
+dataset: meta-tiered-imagenet
+test_set_args:
+  split: meta-test
+  size: 224                 # add for clip
+  transform: clip
+  n_batch: 150
+  n_episode: 4
+  n_way: 15
+  n_shot: 1
+  n_query: 10
+
+
+encoder: ViT-B32
+path: ./save/tiered-imagenet/Mm_trend/meta-tiered-imagenet_ViT-B32_fs-centroid_15y1s_120m_200M
+ckpt: max-va.pth
+# ckpt: epoch-last.pth
+
+
+classifier: fs-centroid
+classifier_args:
+  temp: 10.
+
+V: 1
+n_epochs: 10

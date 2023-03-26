@@ -47,35 +47,42 @@ def main(config):
   test_loader = DataLoader(test_set, E, num_workers=1, pin_memory=True)
 
   ##### Model #####
+  if config.get('ckpt'):
+    ckpt = torch.load(os.path.join(config['path'], config['ckpt']))
 
-  ckpt = torch.load(os.path.join(config['path'], config['ckpt']))
+    ## add for testing train_head
+    if ckpt.get('wrapper_state_dict'):
+      ckpt['encoder_args'] = ckpt.get('encoder_args') or dict()
+      enc = encoders.make(ckpt['encoder'], **ckpt['encoder_args'])
 
-  ## add for testing train_head
-  if ckpt.get('wrapper_state_dict'):
-    ckpt['encoder_args'] = ckpt.get('encoder_args') or dict()
-    enc = encoders.make(ckpt['encoder'], **ckpt['encoder_args'])
+      ckpt['wrap_args'] = ckpt.get('wrap_args') or dict()
+      ckpt['wrap'] = ckpt.get('wrap') or 'OneLayerNN'
+      wrap = encoders.make(ckpt['wrap'], in_dim = enc.get_out_dim(), **ckpt['wrap_args'])
 
-    ckpt['wrap_args'] = ckpt.get('wrap_args') or dict()
-    ckpt['wrap'] = ckpt.get('wrap') or 'OneLayerNN'
-    wrap = encoders.make(ckpt['wrap'], in_dim = enc.get_out_dim(), **ckpt['wrap_args'])
+      wrapper = encoders.make('wrapper', enc = enc, wrap = wrap)
+      wrapper.load_state_dict(ckpt['wrapper_state_dict'])
+      enc = wrapper
+    elif ckpt.get('wrap_state_dict'):
+      ckpt['encoder_args'] = ckpt.get('encoder_args') or dict()
+      enc = encoders.make(ckpt['encoder'], **ckpt['encoder_args'])
 
-    wrapper = encoders.make('wrapper', enc = enc, wrap = wrap)
-    wrapper.load_state_dict(ckpt['wrapper_state_dict'])
-    enc = wrapper
-  elif ckpt.get('wrap_state_dict'):
-    ckpt['encoder_args'] = ckpt.get('encoder_args') or dict()
-    enc = encoders.make(ckpt['encoder'], **ckpt['encoder_args'])
-
-    ckpt['wrap_args'] = ckpt.get('wrap_args') or dict()
-    ckpt['wrap'] = ckpt.get('wrap') or 'OneLayerNN'
-    wrap = encoders.make(ckpt['wrap'], in_dim = enc.get_out_dim(), **ckpt['wrap_args'])
-    
-    wrap.load_state_dict(ckpt['wrap_state_dict'])
-    wrapper = encoders.make('wrapper', enc = enc, wrap = wrap)
-    
-    enc = wrapper
+      ckpt['wrap_args'] = ckpt.get('wrap_args') or dict()
+      ckpt['wrap'] = ckpt.get('wrap') or 'OneLayerNN'
+      wrap = encoders.make(ckpt['wrap'], in_dim = enc.get_out_dim(), **ckpt['wrap_args'])
+      
+      wrap.load_state_dict(ckpt['wrap_state_dict'])
+      wrapper = encoders.make('wrapper', enc = enc, wrap = wrap)
+      
+      enc = wrapper
+    else:
+      enc = encoders.load(ckpt)
   else:
-    enc = encoders.load(ckpt)
+    config['encoder_args'] = config.get('encoder_args') or dict()
+    enc = encoders.make(config['encoder'], **config['encoder_args'])
+    ckpt = {
+      'encoder': config['encoder'],
+      'encoder_args':  config['encoder_args'],
+      }
 
   # enc = encoders.load(ckpt)
   clf = classifiers.make(

@@ -52,7 +52,7 @@ def text_encoder(shot_names, clip_model):
 
         textfea_ep = torch.stack(token_ep)      # [Y,E,D] [5, 4, 512]
         s.append(textfea_ep)
-    s = torch.stack(s)                      # [T=7,Y,E,D] 8 templates        [8, 5, 4, 512]
+    s = torch.stack(s)                      # [T=8,Y,E,D] 8 templates        [8, 5, 4, 512]
     s = s.transpose(0,2)                    # [E,Y,T,D]      [4, 5, 8, 512]
     s /= s.norm(dim = -1, keepdim=True)     # normalize
 
@@ -77,7 +77,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    print(args.do_train, args.do_test)
+    print("train: {}, val: {}, test: {}".format(args.do_train, args.do_val, args.do_test))
     config = yaml.load(open(args.config, 'r'), Loader=yaml.FullLoader)
 
     SEED = config.get('seed') or 0
@@ -165,7 +165,7 @@ def main():
     clf = classifiers.make(config['classifier'], **config['classifier_args'])
 
     ##### Optimizer and ckpt #####
-    ckpt_name = None
+    ckpt_name = config.get('ckpt_name') or None
     if args.do_train:
         ckpt_name = '{}_{}_{}_{}y_{}M'.format(
             config['dataset'], ckpt['encoder'], config['classifier'],
@@ -204,7 +204,8 @@ def main():
 
 
     save_path = config.get('save_path') or './save/VL'
-    ckpt_path = os.path.join(save_path, ckpt_name)
+    ## if config has 'path', it will overwrite all ckpt_path/ckpt_name
+    ckpt_path = config.get('path') or os.path.join(save_path, ckpt_name)
     if not os.path.isdir(ckpt_path):
         utils.ensure_path(ckpt_path)
     utils.set_log_path(ckpt_path)
@@ -236,8 +237,30 @@ def main():
                     q = q.view(1, E, YQ, -1)                # [QV = 1, E, Y * Q, D]
 
                     ### encode text
+                    # ## shot_names: list with length Y, each element of list is a tuple with E names
+                    # # [('vase', 'Alaskan Malamute', 'electric guitar', 'mixing bowl'),
+                    # # ('red king crab', 'scoreboard', 'Dalmatian', 'Golden Retriever'),
+                    # # ('trifle', 'lion', 'vase', 'red king crab'),
+                    # # ('black-footed ferret', 'crate', 'nematode', 'front curtain'),
+                    # # ('crate', 'Golden Retriever', 'bookstore', 'Dalmatian')]
+                    # s = []
+                    # for template in templates:
+                    #     token_ep = list(map(
+                    #         lambda x: enc.model.encode_text(
+                    #             torch.concat(
+                    #                 [clip.tokenize(template.format(name)) for name in x]   # each element is [1,77] tokens for one sentence
+                    #                 ).cuda(non_blocking=True)                               # 4 eps ('vase', 'Alaskan Malamute', 'electric guitar', 'mixing bowl') for tokens for one of Y class [E,77] [4, 77]
+                    #             ),        # 4 eps for text features for one of Y class  [E,D] [4, 512]
+                    #         shot_names
+                    #         ))            # list with length Y, each element is above [E,D]
+
+                    #     textfea_ep = torch.stack(token_ep)      # [Y,E,D] [5, 4, 512]
+                    #     s.append(textfea_ep)
+                    # s = torch.stack(s)                      # [T=8,Y,E,D] 8 templates        [8, 5, 4, 512]
+                    # s = s.transpose(0,2)                    # [E,Y,T,D]      [4, 5, 8, 512]
                     s = text_encoder(shot_names, enc.model)
-                    s = s.unsqueeze(3).unsqueeze(0)         # [SV = 1, E, Y, S, V = 1, D]  [1, 4, 5, 7, 1, 512])
+                    # utils.log(s.shape)
+                    s = s.unsqueeze(3).unsqueeze(0)         # [SV = 1, E, Y, S, V = 1, D]  [1, 4, 5, 8, 1, 512])
 
                     logits = clf(s, q)                      # [1, E, Y*Q, Y]   [1, 4, 75, 5]
                     
@@ -304,7 +327,7 @@ def main():
                 ### encode text, does not update text encoder
                 with torch.no_grad():
                     s = text_encoder(shot_names, enc.model)
-                    s = s.unsqueeze(3).unsqueeze(0)         # [SV = 1, E, Y, S, V = 1, D]  [1, 4, 5, 7, 1, 512])
+                    s = s.unsqueeze(3).unsqueeze(0)         # [SV = 1, E, Y, S, V = 1, D]  [1, 4, 5, 8, 1, 512])
 
 
                 logits = clf(s, q)                      # [1, E, Y*Q, Y]   [1, 4, 75, 5]
@@ -339,7 +362,7 @@ def main():
 
                         ### encode text
                         s = text_encoder(shot_names, enc.model)
-                        s = s.unsqueeze(3).unsqueeze(0)         # [SV = 1, E, Y, S, V = 1, D]  [1, 4, 5, 7, 1, 512])
+                        s = s.unsqueeze(3).unsqueeze(0)         # [SV = 1, E, Y, S, V = 1, D]  [1, 4, 5, 8, 1, 512])
 
                         logits = clf(s, q)                      # [1, E, Y*Q, Y]   [1, 4, 75, 5]
                         

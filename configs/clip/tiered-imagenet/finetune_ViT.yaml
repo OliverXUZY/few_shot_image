@@ -1,4 +1,4 @@
-dataset: meta-mini-imagenet
+dataset: meta-tiered-imagenet
 train_set_args: 
   split: meta-train
   size: 224           # added for ViT
@@ -53,7 +53,7 @@ optimizer_args:
 # save_path: ./save/task_samples/task5000
 
 ########### M,m trend
-save_path: ./save/mini-imagenet/Mm_trend
+save_path: ./save/tiered-imagenet/Mm_trend
 
 save_epoch: 5
 V: 1

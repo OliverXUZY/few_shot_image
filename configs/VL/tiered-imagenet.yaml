@@ -1,0 +1,54 @@
+dataset: vl-meta-tiered-imagenet
+train_set_args: 
+  root: /srv/home/zxu444/datasets/tiered-imagenet/tiered_imagenet
+  split: meta-train
+  size: 224           
+  transform: clip
+  n_batch: 200
+  n_episode: 1
+  n_way: 15
+  n_query: 10
+  deterministic: True  # whether set images in dataset to be deterministic in each epoch
+val_set_args:
+  root: /srv/home/zxu444/datasets/tiered-imagenet/tiered_imagenet
+  split: meta-val
+  size: 224          
+  transform: null
+  n_batch: 200
+  n_episode: 1
+  n_way: 15
+  n_query: 10
+  deterministic: True  # whether set images in dataset to be deterministic in each epoch
+test_set_args:
+  root: /srv/home/zxu444/datasets/tiered-imagenet/tiered_imagenet
+  split: meta-test
+  size: 224                 # add for clip
+  transform: null
+  n_batch: 150
+  n_episode: 4
+  n_way: 15
+  n_query: 15
+  # deterministic: True
+
+
+encoder: ViT-B32
+
+### only for test
+# path: ./save/VL/tiered-imagenet/vl-meta-tiered-imagenet_ViT-B32_fs-centroid_10y_200M
+# ckpt: max-va.pth
+# ckpt: epoch-last.pth
+###
+classifier: fs-centroid
+classifier_args:
+  temp: 10.
+
+optimizer: sgd
+optimizer_args:
+  lr: 1.e-5 # 0.001
+  momentum: 0.9
+  weight_decay: 5.e-6
+
+save_path: ./save/VL/tiered-imagenet
+
+save_epoch: 5
+n_epochs: 10
