@@ -71,12 +71,23 @@
 
 
 #### Examples
+* python command
+```
+python finetune.py \
+    --config=configs/clip/mini-imagenet/finetune_ViT.yaml \
+    --n_batch_train 200 \
+    --n_shot 1 \
+    --sample_per_task 150
+    
+python test.py --config=configs/clip/mini-imagenet/test.yaml 
+```
+modify `path` in `test.yaml ` as saving model path or add `--path [path]` in command `python test.py`
 
 * run one job
 ```
 sbatch script.sh
 ```
-Modify `script.sh` to finetune/test CLIP backbone.
+Modify `script.sh` with different python command.
 
 * run multiple jobs with varying one inputs
 ```
