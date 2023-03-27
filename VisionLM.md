@@ -29,3 +29,8 @@ Download datasets with class names: [here](https://lyy.mpi-inf.mpg.de/mtl/downlo
 | pre-train  | zero-shot NC     | Multi-task finetune + NC |
 |------------|------------------|--------------------------|
 |CLIP-ViT_B32| 93.14 +- 0.04    |  93.49 +- 0.04           |
+
+#### 15-way accuracy (%) on *tiered-ImageNet*
+| pre-train  | zero-shot NC     | Multi-task finetune + NC |
+|------------|------------------|--------------------------|
+|CLIP-ViT_B32| 93.10 +- 0.26    |  -           |
