@@ -35,6 +35,11 @@ Download datasets with class names: [here](https://lyy.mpi-inf.mpg.de/mtl/downlo
 |------------|------------------|--------------------------|
 |CLIP-ViT_B32| 93.10 +- 0.26    |  93.69 +- 0.19           |
 
+### Examples
+```
+sbatch script.sh
+```
+
 ### Local data directory
 Downloaded cached files [here](https://drive.google.com/file/d/1PSpCTF6U6bzOqWp0jF4XhhhybIpc3di8/view?usp=sharing)
 
