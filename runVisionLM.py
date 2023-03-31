@@ -1,6 +1,7 @@
 import argparse
 import os
 import random
+import json
 
 import yaml
 import torch
@@ -10,6 +11,7 @@ import numpy as np
 from tqdm import tqdm
 from torch.utils.data import DataLoader
 from tensorboardX import SummaryWriter
+import time
 
 import datasets
 import models
@@ -104,6 +106,22 @@ def main():
 
         train_loader = DataLoader(train_set, TE, num_workers=1, pin_memory=True)
 
+        # load name to text features
+        name_to_textRep_train = None
+        cache_name_to_textRep_file_train = os.path.join(
+            config['train_set_args']['root'],
+            "tiered-imagenet_train_{}_text_representation.json".format(config['encoder'])
+        )
+        
+        if os.path.exists(cache_name_to_textRep_file_train):
+            start = time.time()
+            with open(cache_name_to_textRep_file_train) as f:
+                name_to_textRep_train = json.load(f)
+            
+            print(
+                "Loading tet features from cached file {} [took {:.3f} s]".format(cache_name_to_textRep_file_train, time.time() - start)
+            )
+
         utils.log("done train dataset loader")
 
     # meta-val
@@ -125,6 +143,22 @@ def main():
 
         val_loader = DataLoader(val_set, E, num_workers=1, pin_memory=True)
 
+        # load name to text features
+        name_to_textRep_val = None
+        cache_name_to_textRep_file_val = os.path.join(
+            config['val_set_args']['root'],
+            "tiered-imagenet_val_{}_text_representation.json".format(config['encoder'])
+        )
+        
+        if os.path.exists(cache_name_to_textRep_file_val):
+            start = time.time()
+            with open(cache_name_to_textRep_file_val) as f:
+                name_to_textRep_val = json.load(f)
+            
+            print(
+                "Loading tet features from cached file {} [took {:.3f} s]".format(cache_name_to_textRep_file_val, time.time() - start)
+            )
+
         utils.log("done val dataset loader")
     
 
@@ -143,6 +177,22 @@ def main():
         y = y.cuda()                # [E * Y * Q]
 
         test_loader = DataLoader(test_set, E, num_workers=1, pin_memory=True)
+        
+        # load name to text features
+        name_to_textRep_test = None
+        cache_name_to_textRep_file_test = os.path.join(
+            config['test_set_args']['root'],
+            "tiered-imagenet_test_{}_text_representation.json".format(config['encoder'])
+        )
+        
+        if os.path.exists(cache_name_to_textRep_file_test):
+            start = time.time()
+            with open(cache_name_to_textRep_file_test) as f:
+                name_to_textRep_test = json.load(f)
+            
+            print(
+                "Loading tet features from cached file {} [took {:.3f} s]".format(cache_name_to_textRep_file_test, time.time() - start)
+            )
     
         utils.log("done test dataset loader")
     
@@ -191,8 +241,6 @@ def main():
         max_va = 0.
         utils.log('num params: {}'.format(utils.count_params(enc)))
 
-        timer_elapsed, timer_epoch = utils.Timer(), utils.Timer()
-
         utils.log("done train model")
     
     
@@ -201,6 +249,8 @@ def main():
             ckpt_name = "vl_zero_shot"
 
         utils.log("done test model")
+    
+    timer_elapsed, timer_epoch = utils.Timer(), utils.Timer()
 
 
     save_path = config.get('save_path') or './save/VL'
@@ -222,19 +272,21 @@ def main():
         aves_keys = ['va']
         aves = {k: utils.AverageMeter() for k in aves_keys}
         va_lst = []
-
+        start_epoch = 1
         for epoch in range(1, config['n_epochs'] + 1):
             np.random.seed(epoch)
 
             with torch.no_grad():
-                for (query, label, shot_names) in tqdm(test_loader, desc='test', leave=False):
-                    
+                for (q, _, shot_names) in tqdm(test_loader, desc='test', leave=False):
+                    # timer= time.time()
                     ### encode image
-                    query = query.cuda(non_blocking=True)   # [E,Y*Q(0,0,0,..,1,1,1...,...), C,H,W] [4,75, 3, 224,224]
-                    E, YQ = query.shape[:-3]
-                    query = query.flatten(0,-4)             # [E*Y*Q, C, H ,W] [300, 3, 224,224]
-                    q = enc(query)                          # [E*Y*Q, D] [300, 512] # in ViT-B32 D = 512
+                    q = q.cuda(non_blocking=True)   # [E,Y*Q(0,0,0,..,1,1,1...,...), C,H,W] [4,75, 3, 224,224]
+                    E, YQ = q.shape[:-3]
+                    q = q.flatten(0,-4)             # [E*Y*Q, C, H ,W] [300, 3, 224,224]
+                    q = enc(q)                          # [E*Y*Q, D] [300, 512] # in ViT-B32 D = 512
                     q = q.view(1, E, YQ, -1)                # [QV = 1, E, Y * Q, D]
+                    
+
 
                     ### encode text
                     # ## shot_names: list with length Y, each element of list is a tuple with E names
@@ -243,35 +295,48 @@ def main():
                     # # ('trifle', 'lion', 'vase', 'red king crab'),
                     # # ('black-footed ferret', 'crate', 'nematode', 'front curtain'),
                     # # ('crate', 'Golden Retriever', 'bookstore', 'Dalmatian')]
-                    # s = []
-                    # for template in templates:
-                    #     token_ep = list(map(
-                    #         lambda x: enc.model.encode_text(
-                    #             torch.concat(
-                    #                 [clip.tokenize(template.format(name)) for name in x]   # each element is [1,77] tokens for one sentence
-                    #                 ).cuda(non_blocking=True)                               # 4 eps ('vase', 'Alaskan Malamute', 'electric guitar', 'mixing bowl') for tokens for one of Y class [E,77] [4, 77]
-                    #             ),        # 4 eps for text features for one of Y class  [E,D] [4, 512]
-                    #         shot_names
-                    #         ))            # list with length Y, each element is above [E,D]
+                    
+                    if name_to_textRep_test:
+                        s = torch.tensor(list(map(
+                            lambda name_ep: [name_to_textRep_test[name] for name in name_ep],  # [E,D] [4, 512]
+                            shot_names
+                        ))).type(torch.float16).cuda(non_blocking=True)           # [Y,E,D] [5, 4, 512]                      
+                        s = s.unsqueeze(0)                    # [T=1,Y,E,D] 8 templates average to 1   [1, 5, 4, 512]
+                        s = s.transpose(0,2)                  # [E,Y,T,D]      [4, 5, 1, 512]
 
-                    #     textfea_ep = torch.stack(token_ep)      # [Y,E,D] [5, 4, 512]
-                    #     s.append(textfea_ep)
-                    # s = torch.stack(s)                      # [T=8,Y,E,D] 8 templates        [8, 5, 4, 512]
-                    # s = s.transpose(0,2)                    # [E,Y,T,D]      [4, 5, 8, 512]
-                    s = text_encoder(shot_names, enc.model)   # [E,Y,T,D]      [4, 5, 8, 512]
+
+                    else:
+                        print("didn't load name to text feature")
+                        s = text_encoder(shot_names, enc.model)   # [E,Y,T,D]      [4, 5, 8, 512]
+                        utils.log(s.shape)
+
+                    # print("VL encoder done!, {} s".format(time.time() - timer))
+                    # timer= time.time()
                     # utils.log(s.shape)
                     s = s.unsqueeze(3).unsqueeze(0)         # [SV = 1, E, Y, S, V = 1, D]  [1, 4, 5, 8, 1, 512])
 
                     logits = clf(s, q)                      # [1, E, Y*Q, Y]   [1, 4, 75, 5]
+                    # print("VL clf done!, {} s".format(time.time() - timer))
                     
                     logits = logits.flatten(0, -2)                  # [E * Y * Q, Y]
                     acc = utils.accuracy(logits, y)
                     aves['va'].update(acc[0])
                     va_lst.append(acc[0].item())
 
-                utils.log('[{}/{}]: acc={:.2f} +- {:.2f} (%)'.format(
-                epoch, str(config['n_epochs']), aves['va'].item(), 
-                utils.mean_confidence_interval(va_lst)), filename='test.txt')
+
+                log_str = '[{}/{}]: acc={:.2f} +- {:.2f} (%)'.format(
+                    epoch, str(config['n_epochs']), aves['va'].item(), 
+                    utils.mean_confidence_interval(va_lst))
+                
+                t_epoch = utils.time_str(timer_epoch.end())
+                t_elapsed = utils.time_str(timer_elapsed.end())
+                t_estimate = utils.time_str(timer_elapsed.end() / 
+                (epoch - start_epoch + 1) * (config['n_epochs'] - start_epoch + 1))
+                log_str += ', {} {}/{}'.format(t_epoch, t_elapsed, t_estimate)
+
+                utils.log(log_str, filename='test.txt')
+
+            
 
     ##### Training and evaluation #####
     if args.do_train:
@@ -316,17 +381,30 @@ def main():
             for param_group in optimizer.param_groups:
                 param_group['lr'] = lr
 
-            for (query, label, shot_names) in tqdm(train_loader, desc='train', leave=False):
+            for (q, _, shot_names) in tqdm(train_loader, desc='train', leave=False):
+                timez= time.time()
                 ### encode image
-                query = query.cuda(non_blocking=True)   # [E,Y*Q(0,0,0,..,1,1,1...,...), C,H,W] [4,75, 3, 224,224]
-                E, YQ = query.shape[:-3]
-                query = query.flatten(0,-4)             # [E*Y*Q, C, H ,W] [300, 3, 224,224]
-                q = enc(query)                          # [E*Y*Q, D] [300, 512] # in ViT-B32 D = 512
+                q = q.cuda(non_blocking=True)   # [E,Y*Q(0,0,0,..,1,1,1...,...), C,H,W] [4,75, 3, 224,224]
+                E, YQ = q.shape[:-3]
+                q = q.flatten(0,-4)             # [E*Y*Q, C, H ,W] [300, 3, 224,224]
+                q = enc(q)                          # [E*Y*Q, D] [300, 512] # in ViT-B32 D = 512
                 q = q.view(1, E, YQ, -1)                # [QV = 1, E, Y * Q, D]
 
                 ### encode text, does not update text encoder
                 with torch.no_grad():
-                    s = text_encoder(shot_names, enc.model)
+                    if name_to_textRep_train:
+                        s = torch.tensor(list(map(
+                            lambda name_ep: [name_to_textRep_train[name] for name in name_ep],  # [E,D] [4, 512]
+                            shot_names
+                        ))).type(torch.float16).cuda(non_blocking=True)           # [Y,E,D] [5, 4, 512]                      
+                        s = s.unsqueeze(0)                    # [T=1,Y,E,D] 8 templates average to 1   [1, 5, 4, 512]
+                        s = s.transpose(0,2)                  # [E,Y,T,D]      [4, 5, 1, 512]
+
+                    else:
+                        print("didn't load name to text feature")
+                        s = text_encoder(shot_names, enc.model)   # [E,Y,T,D]      [4, 5, 8, 512]
+                        utils.log(s.shape)
+                    
                     s = s.unsqueeze(3).unsqueeze(0)         # [SV = 1, E, Y, S, V = 1, D]  [1, 4, 5, 8, 1, 512])
 
 
@@ -339,9 +417,19 @@ def main():
                 aves['tl'].update(loss.item())
                 aves['ta'].update(acc[0])
 
+                # print("forward done!, {} s".format(time.time() - timez))
+                # timey= time.time()
+
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
+
+                # print("backward done!, {} s".format(time.time() - timey))
+
+                print("this batch use: {} s".format(time.time() - timez))
+
+                print("torch.cuda.memory_allocated: {} G".format(torch.cuda.memory_allocated() / 1024/1024/1024))
+                print("torch.cuda.memory_reserved: {} G".format(torch.cuda.memory_reserved()/ 1024/1024/1024))
 
             writer.add_scalar('lr', optimizer.param_groups[0]['lr'], epoch)
     
@@ -351,17 +439,28 @@ def main():
                 np.random.seed(SEED)
                 
                 with torch.no_grad():
-                    for (query, label, shot_names) in tqdm(val_loader, desc='test', leave=False):
+                    for (q, label, shot_names) in tqdm(val_loader, desc='test', leave=False):
                         
                         ### encode image
-                        query = query.cuda(non_blocking=True)   # [E,Y*Q(0,0,0,..,1,1,1...,...), C,H,W] [4,75, 3, 224,224]
-                        E, YQ = query.shape[:-3]
-                        query = query.flatten(0,-4)             # [E*Y*Q, C, H ,W] [300, 3, 224,224]
-                        q = enc(query)                          # [E*Y*Q, D] [300, 512] # in ViT-B32 D = 512
+                        q = q.cuda(non_blocking=True)   # [E,Y*Q(0,0,0,..,1,1,1...,...), C,H,W] [4,75, 3, 224,224]
+                        E, YQ = q.shape[:-3]
+                        q = q.flatten(0,-4)             # [E*Y*Q, C, H ,W] [300, 3, 224,224]
+                        q = enc(q)                          # [E*Y*Q, D] [300, 512] # in ViT-B32 D = 512
                         q = q.view(1, E, YQ, -1)                # [QV = 1, E, Y * Q, D]
 
                         ### encode text
-                        s = text_encoder(shot_names, enc.model)
+                        if name_to_textRep_val:
+                            s = torch.tensor(list(map(
+                                lambda name_ep: [name_to_textRep_val[name] for name in name_ep],  # [E,D] [4, 512]
+                                shot_names
+                            ))).type(torch.float16).cuda(non_blocking=True)           # [Y,E,D] [5, 4, 512]                      
+                            s = s.unsqueeze(0)                    # [T=1,Y,E,D] 8 templates average to 1   [1, 5, 4, 512]
+                            s = s.transpose(0,2)                  # [E,Y,T,D]      [4, 5, 1, 512]
+
+                        else:
+                            print("didn't load name to text feature")
+                            s = text_encoder(shot_names, enc.model)   # [E,Y,T,D]      [4, 5, 8, 512]
+                            utils.log(s.shape)
                         s = s.unsqueeze(3).unsqueeze(0)         # [SV = 1, E, Y, S, V = 1, D]  [1, 4, 5, 8, 1, 512])
 
                         logits = clf(s, q)                      # [1, E, Y*Q, Y]   [1, 4, 75, 5]
@@ -391,7 +490,7 @@ def main():
                 writer.add_scalars('acc', {'val': aves['va']}, epoch + start_epoch_from)
 
             log_str += ', {} {}/{}'.format(t_epoch, t_elapsed, t_estimate)
-            utils.log(log_str)
+            utils.log(log_str, "log.txt")
 
             # saves model and meta-data
 

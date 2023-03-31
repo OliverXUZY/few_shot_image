@@ -2,7 +2,7 @@
 #
 #SBATCH --output=./log/l_device_%j.out
 #SBATCH --error=./log/e_device_%j.err
-#SBATCH -J test50m800M  # give the job a name   
+#SBATCH -J train_val  # give the job a name   
 #***SBATCH --partition=batch_default ***
 # 
 # 1 node, 1 CPU per node (total 1 CPU), wall clock time of hours
@@ -14,11 +14,13 @@
 #SBATCH --cpus-per-task=4     ## CPUs per task; number of threads of each task
 #SBATCH -t 256:00:00          ## Walltime
 #SBATCH --mem=40GB
-#SBATCH -p research
+#SBATCH -p lianglab,research
+#SBATCH --exclude=euler[01-16],euler[24-27]
 source ~/.bashrc
 
 
 echo "======== testing CUDA available ========"
+echo "running on machine: " $(hostname -s)
 python - << EOF
 import torch
 print(torch.cuda.is_available())
@@ -30,15 +32,11 @@ EOF
 
 echo "======== run with different inputs ========"
 
-python finetune.py \
-    --config=configs/clip/mini-imagenet/finetune_ViT.yaml \
-    --n_batch_train $1 \
-    --n_shot $2 \
-    --sample_per_task $3
 
-# python finetune.py --config=configs/clip/mini-imagenet/finetune_ViT_makeup_paper.yaml --n_shot 1 --sample_per_task 50 --path meta-mini-imagenet_ViT-B32_fs-centroid_5y1s_50m_800M
-# python finetune.py --config=configs/clip/mini-imagenet/finetune_RN50.yaml
-# python test.py --config=configs/clip/mini-imagenet/test.yaml 
 
-# python finetune.py --config=configs/moco_v2/mini-imagenet/finetune.yaml
+####====================================================
+## Vision language model
+python runVisionLM.py --config=configs/VL/tiered-imagenet.yaml --do_test
+# python runVisionLM.py --config=configs/VL/tiered-imagenet.yaml --do_train --do_val
+
 
