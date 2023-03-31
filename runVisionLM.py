@@ -258,7 +258,7 @@ def main():
                     #     s.append(textfea_ep)
                     # s = torch.stack(s)                      # [T=8,Y,E,D] 8 templates        [8, 5, 4, 512]
                     # s = s.transpose(0,2)                    # [E,Y,T,D]      [4, 5, 8, 512]
-                    s = text_encoder(shot_names, enc.model)
+                    s = text_encoder(shot_names, enc.model)   # [E,Y,T,D]      [4, 5, 8, 512]
                     # utils.log(s.shape)
                     s = s.unsqueeze(3).unsqueeze(0)         # [SV = 1, E, Y, S, V = 1, D]  [1, 4, 5, 8, 1, 512])
 
