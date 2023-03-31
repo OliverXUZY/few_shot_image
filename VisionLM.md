@@ -34,3 +34,20 @@ Download datasets with class names: [here](https://lyy.mpi-inf.mpg.de/mtl/downlo
 | pre-train  | zero-shot NC     | Multi-task finetune + NC |
 |------------|------------------|--------------------------|
 |CLIP-ViT_B32| 93.10 +- 0.26    |  93.69 +- 0.19           |
+
+### Local data directory
+Downloaded cached files [here](https://drive.google.com/file/d/1PSpCTF6U6bzOqWp0jF4XhhhybIpc3di8/view?usp=sharing)
+
+inside `~/datasets/tiered-imagenet/tiered_imagenet`
+```
+./train
+./cached_test_labels_vl-tiered-imagenet.npy
+./tiered-imagenet_test_ViT-B32_text_representation.json
+./val
+./tiered-imagenet_train_ViT-B32_text_representation.json
+./cached_train_labels_vl-tiered-imagenet.npy
+./tiered-imagenet_val_ViT-B32_text_representation.json
+./cached_val_labels_vl-tiered-imagenet.npy
+./test
+
+```
