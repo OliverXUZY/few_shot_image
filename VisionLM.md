@@ -19,6 +19,7 @@ Download datasets with class names: [here](https://lyy.mpi-inf.mpg.de/mtl/downlo
 
   The templates forward through clip text encoder become text features, act as _"shot images"_.
 
+### 15 query images per class
 #### 10-way accuracy (%) on *mini-ImageNet*
 | pre-train  | zero-shot NC     | Multi-task finetune + NC |
 |------------|------------------|--------------------------|
@@ -34,6 +35,20 @@ Download datasets with class names: [here](https://lyy.mpi-inf.mpg.de/mtl/downlo
 | pre-train  | zero-shot NC     | Multi-task finetune + NC |
 |------------|------------------|--------------------------|
 |CLIP-ViT_B32| 93.10 +- 0.26    |  93.69 +- 0.19           |
+
+#### 15-way accuracy (%) on *tiered-ImageNet*
+| pre-train  | zero-shot NC     | Multi-task finetune + NC |
+|------------|------------------|--------------------------|
+|CLIP-ViT_B32| 76.64 +- 0.08   |  69.80 +- 0.17           |  
+
+(10 epoches, underfit!)
+
+### 2 query images per class
+#### 100-way accuracy (%) on *tiered-ImageNet*
+| pre-train  | zero-shot NC     | Multi-task finetune + NC |
+|------------|------------------|--------------------------|
+|CLIP-ViT_B32| 76.62 +- 0.15    |  -          |
+
 
 ### Examples
 ```
