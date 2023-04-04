@@ -27,6 +27,8 @@
 
 ### M vs m trend
 #### 15-way accuracy (%) on *mini-ImageNet*
+<img width="955" alt="image" src="https://user-images.githubusercontent.com/43462304/229872463-8bbdf45b-d900-4ff1-ba99-4b872fddec5e.png">
+
 | Backbone  | Task(M) |shot images|query images|image per task(m)|Accuracy|
 |------------|--------|-----------|------------|-----------------|-|
 |CLIP-ViT_B32| 0      | None      | None       |None             |68.41 +- 0.54|
@@ -46,7 +48,7 @@
 |            | 800    |1          | 9          |150              |79.87 +- 0.15|
 |            |        |2          | 18         |300              |81.06 +- 0.15|
 |            |        |3          | 27         |450              |81.44 +- 0.14|
-|            |        |4          | 36         |600              |81.59 +- 0.14|
+|            |        |4          | 36         |600              |81.65 +- 0.14|
 
 
 #### 15-way accuracy (%) on *tiered-ImageNet*
