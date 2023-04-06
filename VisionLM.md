@@ -22,10 +22,10 @@ Download datasets with class names: [here](https://lyy.mpi-inf.mpg.de/mtl/downlo
 ### 15 query images per class
 
 
-#### 15-way accuracy (%) on *mini-ImageNet*
+<!-- #### 15-way accuracy (%) on *mini-ImageNet*
 | pre-train  | zero-shot NC     | Multi-task finetune + NC |
 |------------|------------------|--------------------------|
-|CLIP-ViT_B32| 93.14 +- 0.04    |  93.49 +- 0.04           |
+|CLIP-ViT_B32| 93.14 +- 0.04    |  93.49 +- 0.04           | -->
 
 
 #### 15-way accuracy (%) on *tiered-ImageNet*
