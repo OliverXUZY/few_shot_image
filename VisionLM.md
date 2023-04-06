@@ -44,7 +44,7 @@ Download datasets with class names: [here](https://lyy.mpi-inf.mpg.de/mtl/downlo
 1-query image per class, tune with ConLoss, tune vision and text encoder simultaneously.
 | pre-train  | zero-shot NC     | Multi-task finetune + NC |
 |------------|------------------|--------------------------|
-|CLIP-ViT_B32| 84.93 +- 0.76    |  85.01 +- 0.74          |
+|CLIP-ViT_B32| 84.93 +- 0.76    | 85.44 +- 0.75            |
 ### Examples
 train 50-way tiered-imagenet
 ```
