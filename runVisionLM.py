@@ -56,7 +56,8 @@ def text_encoder(shot_names, clip_model):
         s.append(textfea_ep)
     s = torch.stack(s)                      # [T=8,Y,E,D] 8 templates        [8, 5, 4, 512]
     s = s.transpose(0,2)                    # [E,Y,T,D]      [4, 5, 8, 512]
-    s /= s.norm(dim = -1, keepdim=True)     # normalize
+    # s /= s.norm(dim = -1, keepdim=True)     # normalize
+    s = F.normalize(s, dim=-1)       
 
     return s
 
@@ -74,6 +75,13 @@ def parse_args():
     parser.add_argument(
         "--do_test", default=False, help="decide whether to test the model on test set", action='store_true'
     )
+    parser.add_argument(
+        "--ConLoss", default=False, help="decide whether to finetune using contrastive loss", action='store_true'
+    )
+    parser.add_argument(
+        "--cached_text", default=False, help="decide whether to use cached text feature", action='store_true'
+    )
+    
     args = parser.parse_args()
     return args
 
@@ -104,7 +112,7 @@ def main():
         train_y = train_y.repeat(TE, TQ).flatten()      # [TE * SV * TY * TQ]
         train_y = train_y.cuda()
 
-        train_loader = DataLoader(train_set, TE, num_workers=1, pin_memory=True)
+        train_loader = DataLoader(train_set, TE, num_workers=8, pin_memory=True)
 
         # load name to text features
         name_to_textRep_train = None
@@ -113,7 +121,7 @@ def main():
             "tiered-imagenet_train_{}_text_representation.json".format(config['encoder'])
         )
         
-        if os.path.exists(cache_name_to_textRep_file_train):
+        if os.path.exists(cache_name_to_textRep_file_train) and args.cached_text:
             start = time.time()
             with open(cache_name_to_textRep_file_train) as f:
                 name_to_textRep_train = json.load(f)
@@ -121,6 +129,8 @@ def main():
             print(
                 "Loading tet features from cached file {} [took {:.3f} s]".format(cache_name_to_textRep_file_train, time.time() - start)
             )
+        else:
+            print("didn't load name to text feature | train")
 
         utils.log("done train dataset loader")
 
@@ -141,7 +151,7 @@ def main():
         val_y = val_y.repeat(E, Q).flatten()  # [E * Y * Q]
         val_y = val_y.cuda()
 
-        val_loader = DataLoader(val_set, E, num_workers=1, pin_memory=True)
+        val_loader = DataLoader(val_set, E, num_workers=8, pin_memory=True)
 
         # load name to text features
         name_to_textRep_val = None
@@ -150,14 +160,16 @@ def main():
             "tiered-imagenet_val_{}_text_representation.json".format(config['encoder'])
         )
         
-        if os.path.exists(cache_name_to_textRep_file_val):
+        if os.path.exists(cache_name_to_textRep_file_val) and args.cached_text:
             start = time.time()
             with open(cache_name_to_textRep_file_val) as f:
                 name_to_textRep_val = json.load(f)
             
             print(
-                "Loading tet features from cached file {} [took {:.3f} s]".format(cache_name_to_textRep_file_val, time.time() - start)
+                "Loading text features from cached file {} [took {:.3f} s]".format(cache_name_to_textRep_file_val, time.time() - start)
             )
+        else:
+            print("didn't load name to text feature | val")
 
         utils.log("done val dataset loader")
     
@@ -176,7 +188,7 @@ def main():
         y = y.repeat(E, Q).flatten()
         y = y.cuda()                # [E * Y * Q]
 
-        test_loader = DataLoader(test_set, E, num_workers=1, pin_memory=True)
+        test_loader = DataLoader(test_set, E, num_workers=8, pin_memory=True)
         
         # load name to text features
         name_to_textRep_test = None
@@ -185,7 +197,7 @@ def main():
             "tiered-imagenet_test_{}_text_representation.json".format(config['encoder'])
         )
         
-        if os.path.exists(cache_name_to_textRep_file_test):
+        if os.path.exists(cache_name_to_textRep_file_test) and args.cached_text:
             start = time.time()
             with open(cache_name_to_textRep_file_test) as f:
                 name_to_textRep_test = json.load(f)
@@ -193,6 +205,8 @@ def main():
             print(
                 "Loading tet features from cached file {} [took {:.3f} s]".format(cache_name_to_textRep_file_test, time.time() - start)
             )
+        else:
+            print("didn't load name to text feature | test")
     
         utils.log("done test dataset loader")
     
@@ -201,6 +215,9 @@ def main():
         assert os.path.exists(os.path.join(config['path'], config['ckpt']))
         ckpt = torch.load(os.path.join(config['path'], config['ckpt']))
         enc = encoders.load(ckpt)
+        if args.do_train:
+            start_epoch_from = config['start_epoch_from']
+            utils.log("continue to tune {} from {}".format(config['encoder'], start_epoch_from))
     else:
         start_epoch_from = 0
         config['encoder_args'] = config.get('encoder_args') or dict()
@@ -217,10 +234,12 @@ def main():
     ##### Optimizer and ckpt #####
     ckpt_name = config.get('ckpt_name') or None
     if args.do_train:
-        ckpt_name = '{}_{}_{}_{}y_{}M'.format(
+        ckpt_name = '{}_{}_{}_{}y_{}q_{}M_{}lr'.format(
             config['dataset'], ckpt['encoder'], config['classifier'],
             config['train_set_args']['n_way'], 
-            config['train_set_args']['n_batch']
+            config['train_set_args']['n_query'],
+            config['train_set_args']['n_batch'],
+            config['optimizer_args']['lr']
         )
 
         no_decay = ["bias", "LayerNorm.weight"]
@@ -255,12 +274,18 @@ def main():
 
     save_path = config.get('save_path') or './save/VL'
     ## if config has 'path', it will overwrite all ckpt_path/ckpt_name
-    ckpt_path = config.get('path') or os.path.join(save_path, ckpt_name)
+    if args.ConLoss:
+        ckpt_path = config.get('path') or os.path.join(save_path, 'ConLoss', ckpt_name)
+    else: 
+        ckpt_path = config.get('path') or os.path.join(save_path, ckpt_name)
     if not os.path.isdir(ckpt_path):
         utils.ensure_path(ckpt_path)
     utils.set_log_path(ckpt_path)
     writer = SummaryWriter(os.path.join(ckpt_path, 'tensorboard'))
     yaml.dump(config, open(os.path.join(ckpt_path, 'config.yaml'), 'w'))
+
+    if args.do_train:
+        utils.log("optimizer_args: {}".format(config['optimizer_args']))
 
     ##### Testing #####
     if args.do_test:
@@ -306,9 +331,9 @@ def main():
 
 
                     else:
-                        print("didn't load name to text feature")
+                        # print("didn't load name to text feature")
                         s = text_encoder(shot_names, enc.model)   # [E,Y,T,D]      [4, 5, 8, 512]
-                        utils.log(s.shape)
+                        # utils.log(s.shape)
 
                     # print("VL encoder done!, {} s".format(time.time() - timer))
                     # timer= time.time()
@@ -382,7 +407,7 @@ def main():
                 param_group['lr'] = lr
 
             for (q, _, shot_names) in tqdm(train_loader, desc='train', leave=False):
-                timez= time.time()
+                # timez= time.time()
                 ### encode image
                 q = q.cuda(non_blocking=True)   # [E,Y*Q(0,0,0,..,1,1,1...,...), C,H,W] [4,75, 3, 224,224]
                 E, YQ = q.shape[:-3]
@@ -391,28 +416,33 @@ def main():
                 q = q.view(1, E, YQ, -1)                # [QV = 1, E, Y * Q, D]
 
                 ### encode text, does not update text encoder
-                with torch.no_grad():
-                    if name_to_textRep_train:
-                        s = torch.tensor(list(map(
-                            lambda name_ep: [name_to_textRep_train[name] for name in name_ep],  # [E,D] [4, 512]
-                            shot_names
-                        ))).type(torch.float16).cuda(non_blocking=True)           # [Y,E,D] [5, 4, 512]                      
-                        s = s.unsqueeze(0)                    # [T=1,Y,E,D] 8 templates average to 1   [1, 5, 4, 512]
-                        s = s.transpose(0,2)                  # [E,Y,T,D]      [4, 5, 1, 512]
+                # with torch.no_grad():
+                if name_to_textRep_train:
+                    s = torch.tensor(list(map(
+                        lambda name_ep: [name_to_textRep_train[name] for name in name_ep],  # [E,D] [4, 512]
+                        shot_names
+                    ))).type(torch.float16).cuda(non_blocking=True)           # [Y,E,D] [5, 4, 512]                      
+                    s = s.unsqueeze(0)                    # [T=1,Y,E,D] 8 templates average to 1   [1, 5, 4, 512]
+                    s = s.transpose(0,2)                  # [E,Y,T,D]      [4, 5, 1, 512]
 
-                    else:
-                        print("didn't load name to text feature")
-                        s = text_encoder(shot_names, enc.model)   # [E,Y,T,D]      [4, 5, 8, 512]
-                        utils.log(s.shape)
-                    
-                    s = s.unsqueeze(3).unsqueeze(0)         # [SV = 1, E, Y, S, V = 1, D]  [1, 4, 5, 8, 1, 512])
+                else:
+                    # print("didn't load name to text feature")
+                    s = text_encoder(shot_names, enc.model)   # [E,Y,T,D]      [4, 5, 8, 512]
+                    # utils.log(s.shape)
+                
+                s = s.unsqueeze(3).unsqueeze(0)         # [SV = 1, E, Y, S, V = 1, D]  [1, 4, 5, 8, 1, 512])
 
 
                 logits = clf(s, q)                      # [1, E, Y*Q, Y]   [1, 4, 75, 5]
                 
                 logits = logits.flatten(0, -2)                  # [E * Y * Q, Y]
 
-                loss = xent_loss(logits, train_y)
+                # print(logits.shape)
+
+                if args.ConLoss:
+                    loss = xent_loss(logits, train_y) + xent_loss(logits.T, train_y)
+                else:
+                    loss = xent_loss(logits, train_y)
                 acc = utils.accuracy(logits, train_y)
                 aves['tl'].update(loss.item())
                 aves['ta'].update(acc[0])
@@ -426,10 +456,10 @@ def main():
 
                 # print("backward done!, {} s".format(time.time() - timey))
 
-                print("this batch use: {} s".format(time.time() - timez))
+                # print("this batch use: {} s".format(time.time() -  timez))
 
-                print("torch.cuda.memory_allocated: {} G".format(torch.cuda.memory_allocated() / 1024/1024/1024))
-                print("torch.cuda.memory_reserved: {} G".format(torch.cuda.memory_reserved()/ 1024/1024/1024))
+                # print("torch.cuda.memory_allocated: {} G".format(torch.cuda.memory_allocated() / 1024/1024/1024))
+                # print("torch.cuda.memory_reserved: {} G".format(torch.cuda.memory_reserved()/ 1024/1024/1024))
 
             writer.add_scalar('lr', optimizer.param_groups[0]['lr'], epoch)
     
@@ -439,7 +469,7 @@ def main():
                 np.random.seed(SEED)
                 
                 with torch.no_grad():
-                    for (q, label, shot_names) in tqdm(val_loader, desc='test', leave=False):
+                    for (q, label, shot_names) in tqdm(val_loader, desc='val', leave=False):
                         
                         ### encode image
                         q = q.cuda(non_blocking=True)   # [E,Y*Q(0,0,0,..,1,1,1...,...), C,H,W] [4,75, 3, 224,224]
@@ -458,9 +488,9 @@ def main():
                             s = s.transpose(0,2)                  # [E,Y,T,D]      [4, 5, 1, 512]
 
                         else:
-                            print("didn't load name to text feature")
+                            # print("didn't load name to text feature")
                             s = text_encoder(shot_names, enc.model)   # [E,Y,T,D]      [4, 5, 8, 512]
-                            utils.log(s.shape)
+                            # utils.log(s.shape)
                         s = s.unsqueeze(3).unsqueeze(0)         # [SV = 1, E, Y, S, V = 1, D]  [1, 4, 5, 8, 1, 512])
 
                         logits = clf(s, q)                      # [1, E, Y*Q, Y]   [1, 4, 75, 5]
