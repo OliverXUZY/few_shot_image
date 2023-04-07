@@ -72,3 +72,10 @@ inside `~/datasets/tiered-imagenet/tiered_imagenet`
 ./test
 
 ```
+
+# Follow [CoCoOp](https://arxiv.org/pdf/2203.05557.pdf)
+#### test accuracy (%) on *tiered-ImageNet*
+Testing based on all images (160 classes, 206,209 images)
+| pre-train  | zero-shot NC     | Multi-task finetune + NC |
+|------------|------------------|--------------------------|
+|CLIP-ViT_B32| 70.31            | -            |
