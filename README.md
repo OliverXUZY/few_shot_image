@@ -27,7 +27,7 @@
 
 ### M vs m trend
 #### 15-way accuracy (%) on *mini-ImageNet*
-<img width="955" alt="image" src="https://user-images.githubusercontent.com/43462304/229872463-8bbdf45b-d900-4ff1-ba99-4b872fddec5e.png">
+<img width="944" alt="image" src="https://user-images.githubusercontent.com/43462304/230820902-64f19589-0fd6-4fa2-b6a9-e7de7c34e675.png">
 
 | Backbone  | Task(M) |shot images|query images|image per task(m)|Accuracy|
 |------------|--------|-----------|------------|-----------------|-|
@@ -69,8 +69,8 @@
 
 
 #### 15-way accuracy (%) on *tiered-ImageNet*
-<img width="951" alt="image" src="https://user-images.githubusercontent.com/43462304/229681765-8e8f0080-ac8b-4c7e-bc0f-6103452efc5c.png">
-<img width="949" alt="image" src="https://user-images.githubusercontent.com/43462304/229681800-7b5b5cff-3bc9-442d-b678-dd5e9aa62481.png">
+<img width="931" alt="image" src="https://user-images.githubusercontent.com/43462304/230820771-68a38cf2-c064-482c-9377-cc656e56ceb0.png">
+<img width="935" alt="image" src="https://user-images.githubusercontent.com/43462304/230820826-4ac714d3-5993-463c-ae3e-6a190ede829f.png">
 
 | Backbone   | Task(M) |shot images|query images|image per task(m)|Accuracy|
 |------------|--------|-----------|------------|-----------------|-|
