@@ -67,11 +67,19 @@
 |            |        |3          | 27         |450              |-|
 |            |        |4          | 36         |600              |-|
 
+**5-shot in testing**
+| Backbone   | Task(M) |shot images|query images|image per task(m)|Accuracy|
+|------------|--------|-----------|------------|-----------------|-|
+|CLIP-ViT_B32| 0      | None      | None       |None             |88.67 +- 0.14|
+|            | 200    |1          | 9          |150              |93.22 +- 0.11|
+|CLIP-RN50   | 0      | None      | None       |None             |82.03 +- 0.18|
+|            | 200    |1          | 9          |150              |85.09 +- 0.17|
 
 #### 15-way accuracy (%) on *tiered-ImageNet*
 <img width="931" alt="image" src="https://user-images.githubusercontent.com/43462304/230820771-68a38cf2-c064-482c-9377-cc656e56ceb0.png">
 <img width="935" alt="image" src="https://user-images.githubusercontent.com/43462304/230820826-4ac714d3-5993-463c-ae3e-6a190ede829f.png">
 
+**1-shot in testing**
 | Backbone   | Task(M) |shot images|query images|image per task(m)|Accuracy|
 |------------|--------|-----------|------------|-----------------|-|
 |CLIP-ViT_B32| 0      | None      | None       |None             |59.55 +- 0.21|
@@ -109,6 +117,14 @@
 |            |        |3          | 27         |450              |59.73 +- 0.36|
 |            |        |4          | 36         |600              |59.91 +- 0.36|
 <!-- |clip-vit-B32            | 200    |1          | 7          |120              |69.25 +- 0.18| -->
+
+**5-shot in testing**
+| Backbone   | Task(M) |shot images|query images|image per task(m)|Accuracy|
+|------------|--------|-----------|------------|-----------------|-|
+|CLIP-ViT_B32| 0      | None      | None       |None             |79.51 +- 0.27|
+|            | 200    |1          | 9          |150              |84.79 +- 0.22|
+|CLIP-RN50   | 0      | None      | None       |None             |71.40 +- 0.30|
+|            | 200    |1          | 9          |150              |75.80 +- 0.28|
 
 ## Vary num shot
 #### 15-way accuracy (%) on *mini-ImageNet*
