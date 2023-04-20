@@ -67,6 +67,8 @@
 |            |        |2          | 18         |300              |67.31 +- 0.16|
 |            |        |3          | 27         |450              |-|
 |            |        |4          | 36         |600              |-|
+|DinoV2-ViT_b14   | 0      | None      | None       |None             |90.61 +- 0.19|
+|            | 200    |1          | 9          |150              |-|
 
 **5-shot in testing**
 | Backbone   | Task(M) |shot images|query images|image per task(m)|Accuracy|
@@ -75,6 +77,8 @@
 |            | 200    |1          | 9          |150              |93.22 +- 0.11|
 |CLIP-RN50   | 0      | None      | None       |None             |82.03 +- 0.18|
 |            | 200    |1          | 9          |150              |85.09 +- 0.17|
+|DinoV2-ViT_b14   | 0      | None      | None       |None             |97.20 +- 0.06|
+|            | 200    |1          | 9          |150              |-|
 
 #### 15-way accuracy (%) on *tiered-ImageNet*
 <img width="931" alt="image" src="https://user-images.githubusercontent.com/43462304/230820771-68a38cf2-c064-482c-9377-cc656e56ceb0.png">
@@ -135,8 +139,12 @@
 **1-shot in testing**
 | Backbone   | Task(M) |shot images|query images|image per task(m)|Accuracy|
 |------------|--------|-----------|------------|-----------------|-|
-|DinoV2-ViT_b14| 0      | None      | None       |None             |61.65 +- 0.41|
+|CLIP-ViT_B32| 0      | None      | None       |None             |44.49 +- 0.37|
 |            | 200    |1          | 9          |150              |-|
+|CLIP-RN50   | 0      | None      | None       |None             |38.15 +- 0.39|
+|            | 200    |1          | 9          |150              |-|
+|DinoV2-ViT_b14| 0      | None      | None       |None             |61.65 +- 0.41|
+|            | 200    |1          | 9          |150              |68.22 +- 0.40|
 
 ## Vary num shot
 #### 15-way accuracy (%) on *mini-ImageNet*
