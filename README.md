@@ -129,7 +129,7 @@
 |CLIP-RN50   | 0      | None      | None       |None             |71.40 +- 0.30|
 |            | 200    |1          | 9          |150              |75.80 +- 0.28|
 |DinoV2-ViT_b14   | 0      | None      | None       |None             |92.90 +- 0.16|
-|            | 200    |1          | 9          |150              |-|
+|            | 200    |1          | 9          |150              |93.65 +- 0.16|
 
 #### 15-way accuracy (%) on *domain-Net*
 **1-shot in testing**
