@@ -95,13 +95,41 @@ def get_transform(name, size, statistics=None):
     ])
   elif name == 'clip':
     return transforms.Compose([
-        transforms.Resize(size, interpolation=BICUBIC),
-        transforms.CenterCrop(size),
-        _convert_image_to_rgb,
-        transforms.ToTensor(),
-        transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711)),
+      transforms.Resize(size, interpolation=BICUBIC),
+      transforms.CenterCrop(size),
+      _convert_image_to_rgb,
+      transforms.ToTensor(),
+      transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711)),
     ])
-  elif  name is None:
+  elif name == 'dinov2':
+    # roughly copy from dinov2/data/augmentations.py
+    return transforms.Compose([
+      # color distorsions / blurring
+      transforms.RandomResizedCrop(
+          224, scale=(0.32, 1.0), interpolation=transforms.InterpolationMode.BICUBIC
+      ),
+      transforms.RandomHorizontalFlip(p=0.5),
+      # color distorsions / blurring
+      transforms.RandomApply(
+          [transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1)],
+          p=0.8,
+      ),
+      transforms.RandomGrayscale(p=0.2),
+      # normalization
+      transforms.ToTensor(),
+      transforms.Normalize(**statistics),
+    ])
+  elif name == 'make_classification_eval_transform':
+    # roughly copy from dinov2/data/trainsforms.py L78
+    # This matches (roughly) torchvision's preset for classification evaluation:
+    #  https://github.com/pytorch/vision/blob/main/references/classification/presets.py#L47-L69
+    return transforms.Compose([
+      transforms.Resize(256, interpolation=transforms.InterpolationMode.BICUBIC),
+      transforms.CenterCrop(224),
+      transforms.ToTensor(),
+      transforms.Normalize(**statistics),
+    ])
+  elif name is None:
     return transforms.Compose([
       transforms.Resize(size),
       transforms.ToTensor(),

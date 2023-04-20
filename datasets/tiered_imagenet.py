@@ -35,6 +35,7 @@ class TieredImageNet(Dataset):
     split_tag = split_dict[split]
 
     split_file = os.path.join(root, split_tag + '_images.npz')
+    print(split_file)
     label_file = os.path.join(root, split_tag + '_labels.pkl')
     assert os.path.isfile(split_file)
     assert os.path.isfile(label_file)
@@ -179,10 +180,11 @@ class VLMetaTieredImageNet(Dataset):
                  }
     split_tag = split_dict.get(split) or split
     split_dir = '{}/{}'.format(root, split_tag)
+    print(split_dir)
     assert os.path.isdir(split_dir)
     
-    self.statistics = {'mean': [0.471, 0.450, 0.403],
-                       'std':  [0.278, 0.268, 0.284]}
+    self.statistics = {'mean': [0.485, 0.456, 0.406],
+                       'std': [0.229, 0.224, 0.225]}
     self.transform = get_transform(transform, size, self.statistics)
 
     self.dataset = ImageFolder(root = split_dir, transform = self.transform)
@@ -209,7 +211,7 @@ class VLMetaTieredImageNet(Dataset):
       start = time.time()
       self.label = np.array([target for _, target in self.dataset])
       np.save(cache_label_file, self.label)
-      # ^ This seems to take a lot of time(even longer than my laptop) so I want to investigate why and how we can improve.
+      # ^ This seems to take forever (but 5 mins at my laptop) so I want to investigate why and how we can improve.
       print(
           "Saving labels into cached file %s [took %.3f s]", cache_label_file, time.time() - start
       )
@@ -240,7 +242,7 @@ class VLMetaTieredImageNet(Dataset):
       idx = np.random.choice(self.catlocs[c], q, replace=False) 
       c_query = torch.stack([self.dataset[i][0] for i in idx])  # [q, C, H ,W] [3, 3, 224, 224]
       query += (c_query,)
-    query = torch.cat(query)    # [QV, Y * Q, C, H, W] 
+    query = torch.cat(query)    # [Y * Q, C, H, W] 
     cats = torch.from_numpy(cats)
     
     return query, cats, label_names

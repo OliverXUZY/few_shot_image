@@ -6,3 +6,4 @@ from . import cub200
 from . import inatural
 from . import transforms
 from . import omniglot
+from . import domain_net

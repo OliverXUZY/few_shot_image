@@ -56,8 +56,8 @@ class MiniImageNet(Dataset):
     self.label = new_label
     self.n_class = len(label_key)
     
-    self.statistics = {'mean': [0.471, 0.450, 0.403],
-                       'std':  [0.278, 0.268, 0.284]}
+    self.statistics = {'mean': [0.485, 0.456, 0.406],
+                       'std': [0.229, 0.224, 0.225]}
     transform = get_transform(transform, size, self.statistics)
     self.transform = MultiViewTransform(transform, n_view)
 
@@ -362,7 +362,7 @@ class VLMetaMiniImageNet(Dataset):
       idx = np.random.choice(self.catlocs[c], q, replace=False) 
       c_query = torch.stack([self.dataset[i][0] for i in idx])  # [q, C, H ,W] [3, 3, 224, 224]
       query += (c_query,)
-    query = torch.cat(query)    # [QV, Y * Q, C, H, W] 
+    query = torch.cat(query)    # [Y * Q, C, H, W] 
     cats = torch.from_numpy(cats)
     
     return query, cats, label_names
