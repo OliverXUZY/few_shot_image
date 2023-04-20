@@ -7,6 +7,7 @@
 **Datasets**
 - [miniImageNet](https://mega.nz/#!rx0wGQyS!96sFlAr6yyv-9QQPCm5OBFbOm4XSD0t-HlmGaT5GaiE) (courtesy of [Spyros Gidaris](https://github.com/gidariss/FewShotWithoutForgetting))
 - [tieredImageNet](https://drive.google.com/open?id=1nVGCTd9ttULRXFezh4xILQ9lUkg0WZCG) (courtesy of [Kwonjoon Lee](https://github.com/kjunelee/MetaOptNet))
+- [domainNet](http://ai.bu.edu/M3SDA/)
 - [ImageNet-800](http://image-net.org/challenges/LSVRC/2012/)
 
 ### result
@@ -116,6 +117,8 @@
 |            |        |2          | 18         |300              |58.95 +- 0.36|
 |            |        |3          | 27         |450              |59.73 +- 0.36|
 |            |        |4          | 36         |600              |59.91 +- 0.36|
+|DinoV2-ViT_b14   | 0      | None      | None       |None             |82.33 +- 0.30|
+|            | 200    |1          | 9          |150              |84.74 +- 0.30|
 <!-- |clip-vit-B32            | 200    |1          | 7          |120              |69.25 +- 0.18| -->
 
 **5-shot in testing**
@@ -125,6 +128,15 @@
 |            | 200    |1          | 9          |150              |84.79 +- 0.22|
 |CLIP-RN50   | 0      | None      | None       |None             |71.40 +- 0.30|
 |            | 200    |1          | 9          |150              |75.80 +- 0.28|
+|DinoV2-ViT_b14   | 0      | None      | None       |None             |92.90 +- 0.16|
+|            | 200    |1          | 9          |150              |-|
+
+#### 15-way accuracy (%) on *domain-Net*
+**1-shot in testing**
+| Backbone   | Task(M) |shot images|query images|image per task(m)|Accuracy|
+|------------|--------|-----------|------------|-----------------|-|
+|DinoV2-ViT_b14| 0      | None      | None       |None             |61.65 +- 0.41|
+|            | 200    |1          | 9          |150              |-|
 
 ## Vary num shot
 #### 15-way accuracy (%) on *mini-ImageNet*
