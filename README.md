@@ -68,7 +68,7 @@
 |            |        |3          | 27         |450              |-|
 |            |        |4          | 36         |600              |-|
 |DinoV2-ViT_b14   | 0      | None      | None       |None             |90.61 +- 0.19|
-|            | 200    |1          | 9          |150              |-|
+|            | 200    |1          | 9          |150              |92.77 +- 0.18|
 
 **5-shot in testing**
 | Backbone   | Task(M) |shot images|query images|image per task(m)|Accuracy|
@@ -78,7 +78,7 @@
 |CLIP-RN50   | 0      | None      | None       |None             |82.03 +- 0.18|
 |            | 200    |1          | 9          |150              |85.09 +- 0.17|
 |DinoV2-ViT_b14   | 0      | None      | None       |None             |97.20 +- 0.06|
-|            | 200    |1          | 9          |150              |-|
+|            | 200    |1          | 9          |150              |97.68 +- 0.06|
 
 #### 15-way accuracy (%) on *tiered-ImageNet*
 <img width="931" alt="image" src="https://user-images.githubusercontent.com/43462304/230820771-68a38cf2-c064-482c-9377-cc656e56ceb0.png">
@@ -139,12 +139,23 @@
 **1-shot in testing**
 | Backbone   | Task(M) |shot images|query images|image per task(m)|Accuracy|
 |------------|--------|-----------|------------|-----------------|-|
-|CLIP-ViT_B32| 0      | None      | None       |None             |44.49 +- 0.37|
-|            | 200    |1          | 9          |150              |-|
-|CLIP-RN50   | 0      | None      | None       |None             |38.35 +- 0.35|
-|            | 200    |1          | 9          |150              |-|
+|CLIP-ViT_B32| 0      | None      | None       |None             |46.48 +- 0.37|
+|            | 200    |1          | 9          |150              |64.97 +- 0.39|
+|CLIP-RN50   | 0      | None      | None       |None             |40.55 +- 0.36|
+|            | 200    |1          | 9          |150              |52.67 +- 0.39|
 |DinoV2-ViT_b14| 0      | None      | None       |None             |61.65 +- 0.41|
 |            | 200    |1          | 9          |150              |68.22 +- 0.40|
+
+
+**5-shot in testing**
+| Backbone   | Task(M) |shot images|query images|image per task(m)|Accuracy|
+|------------|--------|-----------|------------|-----------------|-|
+|CLIP-ViT_B32| 0      | None      | None       |None             |72.01 +- 0.29|
+|            | 200    |1          | 9          |150              |80.49 +- 0.25|
+|CLIP-RN50   | 0      | None      | None       |None             |-|
+|            | 200    |1          | 9          |150              |-|
+|DinoV2-ViT_b14| 0      | None      | None       |None             |-|
+|            | 200    |1          | 9          |150              |-|
 
 ## Vary num shot
 #### 15-way accuracy (%) on *mini-ImageNet*
