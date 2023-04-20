@@ -1,7 +1,7 @@
 import argparse
 import os
 import random
-
+import time
 import yaml
 import torch
 import torch.nn as nn
@@ -9,8 +9,8 @@ import torch.nn.functional as F
 import numpy as np
 from tqdm import tqdm
 from torch.utils.data import DataLoader
-from tensorboardX import SummaryWriter
-
+# from tensorboardX import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 import datasets
 import models
 from models import encoders, classifiers
@@ -32,8 +32,9 @@ def main(config):
 
   ##### Dataset #####
   
-  V = config['train_set_args']['n_view'] = config['V']
-  SV = config['train_set_args']['n_meta_view'] = 1
+  # V = config['train_set_args']['n_view'] = config['V']
+  # SV = config['train_set_args']['n_meta_view'] = 1
+  V = SV = 1
 
   # meta-train
   train_set = datasets.make(config['dataset'], **config['train_set_args'])
@@ -50,7 +51,7 @@ def main(config):
   y = y.repeat(TE, SV, TQ).flatten()      # [TE * SV * TY * TQ]
   y = y.cuda()
 
-  train_loader = DataLoader(train_set, TE, num_workers=1, pin_memory=True)
+  train_loader = DataLoader(train_set, TE, num_workers=8, pin_memory=True)
 
   # meta-val
   eval_val = False
@@ -70,7 +71,7 @@ def main(config):
     val_y = val_y.repeat(E, Q).flatten()  # [E * Y * Q]
     val_y = val_y.cuda()
 
-    val_loader = DataLoader(val_set, E, num_workers=1, pin_memory=True)
+    val_loader = DataLoader(val_set, E, num_workers=8, pin_memory=True)
   
   ##### Model and Optimizer #####
 
@@ -176,6 +177,7 @@ def main(config):
 
     for idx, (s, q, _) in enumerate(
       tqdm(train_loader, desc='train', leave=False)):
+      # timez= time.time()
       # warm up learning rate
       if epoch <= warmup_epochs:
         lr = utils.warmup(warmup_from, warmup_to, 
@@ -193,10 +195,14 @@ def main(config):
       acc = utils.accuracy(logits, y)
       aves['tl'].update(loss.item())
       aves['ta'].update(acc[0])
+      # print("forward done!, {} s".format(time.time() - timez))
+      # timez= time.time()
 
       optimizer.zero_grad()
       loss.backward()
       optimizer.step()
+
+      # print("backward done!, {} s".format(time.time() - timez))
 
     writer.add_scalar('lr', optimizer.param_groups[0]['lr'], epoch)
 
@@ -305,15 +311,25 @@ if __name__ == '__main__':
   args = parser.parse_args()
   config = yaml.load(open(args.config, 'r'), Loader=yaml.FullLoader)
 
+  if args.path:
+    if "tiered" in config['dataset']:
+      config['path'] = "./save/tiered-imagenet/Mm_trend/{}".format(args.path)
+      utils.log("load model from path: {}".format(config['path']))
+      config['train_set_args']['n_way'] = int(args.path[38:40])
+      args.n_shot = int(args.path[41:42])
+      args.sample_per_task = int(args.path[44:47])
+      args.n_batch_train = int(args.path[49:52])
+    elif "mini" in config['dataset']:
+      config['path'] = "./save/mini-imagenet/Mm_trend/{}".format(args.path)
+      utils.log("load model from path: {}".format(config['path']))
+
   if args.n_batch_train:
     config['train_set_args']['n_batch'] = int(args.n_batch_train)
   if args.n_shot:
     config['train_set_args']['n_shot'] = int(args.n_shot)
   if args.sample_per_task:
     config['train_set_args']['n_query'] = int(args.sample_per_task/config['train_set_args']['n_way'] - args.n_shot)
-  if args.path:
-    config['path'] = "./save/task_samples/make_up_paper/{}".format(args.path)
-    utils.log("load model from path: {}".format(config['path']))
+  
     
   utils.log('{}y{}s_{}m_{}M'.format(
     config['train_set_args']['n_way'], 

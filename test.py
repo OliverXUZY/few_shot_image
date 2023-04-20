@@ -8,8 +8,9 @@ import torch.nn as nn
 import numpy as np
 from tqdm import tqdm
 from torch.utils.data import DataLoader
-from tensorboardX import SummaryWriter
-
+# from tensorboardX import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
+torch.utils.tensorboard
 import datasets
 import models
 from models import encoders, classifiers
@@ -27,9 +28,8 @@ def main(config):
   # torch.backends.cudnn.deterministic = True
 
   ##### Dataset #####
-
-  V = config['test_set_args']['n_view'] = config['V']
-  config['test_set_args']['n_meta_view'] = 1
+  # V = config['test_set_args']['n_view'] = config['V']
+  # config['test_set_args']['n_meta_view'] = 1
   test_set = datasets.make(config['dataset'], **config['test_set_args'])
   utils.log('test dataset: {} (x{}), {}'.format(
     test_set[0][0].shape, len(test_set), test_set.n_class), filename='test.txt')
@@ -44,7 +44,7 @@ def main(config):
   y = y.repeat(E, Q).flatten()
   y = y.cuda()                # [E * Y * Q]
 
-  test_loader = DataLoader(test_set, E, num_workers=1, pin_memory=True)
+  test_loader = DataLoader(test_set, E, num_workers=8, pin_memory=True)
 
   ##### Model #####
   if config.get('ckpt'):
@@ -83,6 +83,9 @@ def main(config):
       'encoder': config['encoder'],
       'encoder_args':  config['encoder_args'],
       }
+    modeldir = 'dinov2' if 'dinov2' in config['encoder'] else 'clip'
+    config['path'] = "./save/{}/{}/{}".format(modeldir, config['dataset'].replace('meta-', ''), "original")
+    utils.log("construct encoder {} from pre-train".format(config['encoder']))
 
   # enc = encoders.load(ckpt)
   clf = classifiers.make(
@@ -94,8 +97,12 @@ def main(config):
 
   utils.set_log_path(config['path'])
 
+  timer_elapsed, timer_epoch = utils.Timer(), utils.Timer()
+
   ##### Evaluation #####
-  utils.log('{}_{}y{}s:'.format(config['classifier'], 
+  utils.log('{}_{}_{}y{}s:'.format(
+    config['encoder'],
+    config['classifier'], 
       config['test_set_args']['n_way'], config['test_set_args']['n_shot']), filename='test.txt')
 
   model.eval()
@@ -118,9 +125,17 @@ def main(config):
         aves['va'].update(acc[0])
         va_lst.append(acc[0].item())
 
-    utils.log('[{}/{}]: acc={:.2f} +- {:.2f} (%)'.format(
+    log_str = '[{}/{}]: acc={:.2f} +- {:.2f} (%)'.format(
       epoch, str(config['n_epochs']), aves['va'].item(), 
-      utils.mean_confidence_interval(va_lst)), filename='test.txt')
+      utils.mean_confidence_interval(va_lst))
+    
+    t_epoch = utils.time_str(timer_epoch.end())
+    t_elapsed = utils.time_str(timer_elapsed.end())
+    t_estimate = utils.time_str(timer_elapsed.end() / 
+      (epoch - 1 + 1) * (config['n_epochs'] - 1 + 1))
+
+    log_str += ', {} {}/{}'.format(t_epoch, t_elapsed, t_estimate)
+    utils.log(log_str, filename='test.txt')
 
 
 if __name__ == '__main__':
@@ -133,12 +148,16 @@ if __name__ == '__main__':
   parser.add_argument('--path', 
                       help='the path to saved model', 
                       type=str)
+  parser.add_argument('--exp', 
+                      help='type of experiments', 
+                      type=str, default='Mm_trend')
   args = parser.parse_args()
   config = yaml.load(open(args.config, 'r'), Loader=yaml.FullLoader)
 
   if args.path:  # customized saved path here
-    config['path'] = "./save/{}/Mm_trend/{}".format(config['dataset'].replace('meta-', ''),args.path)
+    config['path'] = "./save/{}/{}/{}".format(config['dataset'].replace('meta-', ''), args.exp, args.path)
     utils.log("load model from path: {}".format(config['path']))
+  # print("zhuoyan: ", config['path'])
 
   if len(args.gpu.split(',')) > 1:
     config['_parallel'] = True
