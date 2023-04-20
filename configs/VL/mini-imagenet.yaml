@@ -4,7 +4,7 @@ train_set_args:
   split: meta-train
   size: 224           
   transform: clip
-  n_batch: 200
+  n_batch: 20
   n_episode: 1
   n_way: 15
   n_query: 15
@@ -13,8 +13,8 @@ val_set_args:
   root: /srv/home/zxu444/datasets/mini-imagenet
   split: meta-val
   size: 224          
-  transform: null
-  n_batch: 200
+  transform: clip
+  n_batch: 20
   n_episode: 1
   n_way: 15
   n_query: 15
@@ -23,9 +23,9 @@ test_set_args:
   root: /srv/home/zxu444/datasets/mini-imagenet
   split: meta-test
   size: 224                 # add for clip
-  transform: null
+  transform: clip
   n_batch: 150
-  n_episode: 4
+  n_episode: 1
   n_way: 15
   n_query: 15
   # deterministic: True
@@ -33,9 +33,12 @@ test_set_args:
 
 encoder: ViT-B32
 
-### only for test
-path: ./save/VL/mini-imagenet/vl-meta-mini-imagenet_ViT-B32_fs-centroid_15y_200M
-ckpt_name: vl-meta-mini-imagenet_ViT-B32_fs-centroid_15y_200M
+### load model
+# path: ./save/VL/mini-imagenet/vl-meta-mini-imagenet_ViT-B32_fs-centroid_5y_15q_20M
+# ckpt_name: vl-meta-mini-imagenet_ViT-B32_fs-centroid_5y_15q_20M
+# path: ./save/mini-imagenet/Mm_trend/meta-mini-imagenet_ViT-B32_fs-centroid_15y4s_600m_800M
+# ckpt_name: meta-mini-imagenet_ViT-B32_fs-centroid_15y4s_600m_800M
+
 ckpt: max-va.pth
 # ckpt: epoch-last.pth
 ###
@@ -45,11 +48,12 @@ classifier_args:
 
 optimizer: sgd
 optimizer_args:
-  lr: 1.e-5 # 0.001
+  lr: 1.e-7 # 0.001
   momentum: 0.9
-  weight_decay: 5.e-6
+  weight_decay: 0 # 5.e-6
 
 save_path: ./save/VL/mini-imagenet
 
 save_epoch: 5
-n_epochs: 10
+n_epochs: 20
+# start_epoch_from: 10

@@ -1,4 +1,4 @@
-dataset: meta-mini-imagenet
+dataset: meta-tiered-imagenet
 train_set_args:
   split: meta-train
   size: 224           # added for CLIP
@@ -22,8 +22,9 @@ val_set_args:
 
 encoder: RN50
 
-# path: ./save/clip/meta-mini-imagenet_RN50_fs-centroid_5y1s_finetune_clip_old
-# ckpt: max-va.pth
+# path: ./save/tiered-imagenet/Mm_trend/meta-tiered-imagenet_RN50_fs-centroid_15y1s_150m_600M
+# ckpt: epoch-last.pth
+# start_epoch_from: 50
 
 classifier: fs-centroid
 classifier_args:
@@ -46,12 +47,11 @@ optimizer_args:
 ########### vary few shot images per task
 # save_path: ./save/few_shot_images/shot5/run3
 
-########### task, samples
-# save_path: ./save/task_samples/task200
+########### M,m trend
+# save_path: ./save/tiered-imagenet/Mm_trend
 
-save_path: ./save/mini-imagenet/Mm_trend
+save_path: ./save/mini-imagenet/vary_num_shot
 
-# save_path: ./save/mini-imagenet/vary_num_shot
 
 V: 1
-n_epochs: 30
+n_epochs: 20
