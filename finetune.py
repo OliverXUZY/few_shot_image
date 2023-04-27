@@ -95,6 +95,14 @@ def main(config):
   clf = classifiers.make(config['classifier'], **config['classifier_args'])
   
   model = models.Model(enc, clf)
+
+  ### if standard FT
+  if config['stdFT']:
+    config['lp_args'] = config.get('lp_args') or dict()
+    config['lp_args']['in_dim'] = enc.get_out_dim()
+    config['lp_args']['n_way'] = train_set.n_class
+    lp = classifiers.make('logistic', **config['lp_args'])
+  model_lp = models.Model(enc, lp)
     
 
   optimizer = optimizers.make(config['optimizer'], model.parameters(), 
@@ -115,12 +123,23 @@ def main(config):
                                   ))
   timer_elapsed, timer_epoch = utils.Timer(), utils.Timer()
 
-  ckpt_name = '{}_{}_{}_{}y{}s_{}m_{}M'.format(
-    config['dataset'], ckpt['encoder'], config['classifier'],
-    config['train_set_args']['n_way'], config['train_set_args']['n_shot'], 
-    (config['train_set_args']['n_shot'] + config['train_set_args']['n_query']) * config['train_set_args']['n_way'],
-    config['train_set_args']['n_batch']
-  )
+  if not config['stdFT']:
+    ### if not standard FT
+    ckpt_name = '{}_{}_{}_{}y{}s_{}m_{}M'.format(
+      config['dataset'], ckpt['encoder'], config['classifier'],
+      config['train_set_args']['n_way'], config['train_set_args']['n_shot'], 
+      (config['train_set_args']['n_shot'] + config['train_set_args']['n_query']) * config['train_set_args']['n_way'],
+      config['train_set_args']['n_batch']
+    )
+  else:
+    ### if standard FT
+    ckpt_name = '{}_{}_{}_{}y{}s_{}m_{}M'.format(
+      config['dataset'], ckpt['encoder'], 'lp_logistic',
+      config['train_set_args']['n_way'], config['train_set_args']['n_shot'], 
+      (config['train_set_args']['n_shot'] + config['train_set_args']['n_query']) * config['train_set_args']['n_way'],
+      config['train_set_args']['n_batch']
+    )
+
   if args.tag is not None:
     ckpt_name += '[' + args.tag + ']'
 
@@ -131,6 +150,9 @@ def main(config):
   if not config.get('path'):
     utils.ensure_path(ckpt_path)
   utils.set_log_path(ckpt_path)
+  
+  utils.log("save to path: {}".format(ckpt_path))
+
   writer = SummaryWriter(os.path.join(ckpt_path, 'tensorboard'))
   yaml.dump(config, open(os.path.join(ckpt_path, 'config.yaml'), 'w'))
 
@@ -174,35 +196,79 @@ def main(config):
     lr = utils.decay_lr(epoch, config['n_epochs'], **config['optimizer_args'])
     for param_group in optimizer.param_groups:
       param_group['lr'] = lr
+    
+    if not config['stdFT']:
+      ### if not standard FT
+      for idx, (s, q, _) in enumerate(
+        tqdm(train_loader, desc='train', leave=False)):
+        # warm up learning rate
+        if epoch <= warmup_epochs:
+          lr = utils.warmup(warmup_from, warmup_to, 
+                            epoch, warmup_epochs, idx, len(train_loader))
+          for param_group in optimizer.param_groups:
+            param_group['lr'] = lr
 
-    for idx, (s, q, _) in enumerate(
-      tqdm(train_loader, desc='train', leave=False)):
-      # timez= time.time()
-      # warm up learning rate
-      if epoch <= warmup_epochs:
-        lr = utils.warmup(warmup_from, warmup_to, 
-                          epoch, warmup_epochs, idx, len(train_loader))
-        for param_group in optimizer.param_groups:
-          param_group['lr'] = lr
+        s = s.cuda(non_blocking=True)             # [TE, SV, TY * TS, V, C, H, W]
+        q = q.cuda(non_blocking=True)             # [TE, SV, TY * TQ, C, H, W]
+        s = s.view(TE, SV, TY, TS, *s.shape[-4:]) # [TE, SV, TY, TS, V, C, H, W]
+        
+        logits, _ = model(s, q)
+        logits = logits.flatten(0, -2)            # [TE * SV * TY * TQ, TY]
+        loss = xent_loss(logits, y)
+        acc = utils.accuracy(logits, y)
+        aves['tl'].update(loss.item())
+        aves['ta'].update(acc[0])
 
-      s = s.cuda(non_blocking=True)             # [TE, SV, TY * TS, V, C, H, W]
-      q = q.cuda(non_blocking=True)             # [TE, SV, TY * TQ, C, H, W]
-      s = s.view(TE, SV, TY, TS, *s.shape[-4:]) # [TE, SV, TY, TS, V, C, H, W]
-      
-      logits, _ = model(s, q)
-      logits = logits.flatten(0, -2)            # [TE * SV * TY * TQ, TY]
-      loss = xent_loss(logits, y)
-      acc = utils.accuracy(logits, y)
-      aves['tl'].update(loss.item())
-      aves['ta'].update(acc[0])
-      # print("forward done!, {} s".format(time.time() - timez))
-      # timez= time.time()
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+    else:
+      ### if standard FT
+      for idx, (s, q, c) in enumerate(
+        tqdm(train_loader, desc='train', leave=False)):
+        # warm up learning rate
+        if epoch <= warmup_epochs:
+          lr = utils.warmup(warmup_from, warmup_to, 
+                            epoch, warmup_epochs, idx, len(train_loader))
+          for param_group in optimizer.param_groups:
+            param_group['lr'] = lr
 
-      optimizer.zero_grad()
-      loss.backward()
-      optimizer.step()
+        s = s.cuda(non_blocking=True)             # [TE, SV, TY * TS, V, C, H, W]
+        q = q.cuda(non_blocking=True)             # [TE, SV, TY * TQ, C, H, W]
+        s = s.view(TE, SV, TY, TS, *s.shape[-4:]) # [TE, SV, TY, TS, V, C, H, W]
 
-      # print("backward done!, {} s".format(time.time() - timez))
+        assert s.dim() == 8                             # [E, SV, Y, S, V, C, H, W]
+        assert q.dim() == 6                             # [E, QV, Y * Q, C, H, W]
+        assert s.size(0) == q.size(0)
+        assert q.size(1) in [1, s.size(1)]
+        s = s.transpose(0, 1)                           # [SV, E, Y, S, V, C, H, W]
+        q = q.transpose(0, 1)                           # [QV, E, Y * Q, C, H, W]
+        # print(s.shape)
+        # print(q.shape)
+
+        # SV_lp, E_lp, Y_lp, S_lp, V_lp = s.shape[:-3]
+        # QV_lp, _, YQ_lp = q.shape[:-3]
+        # YSV_lp, Q_lp = Y_lp * S_lp * V_lp, YQ_lp // Y_lp
+
+        s = s.flatten(0, -4)                          # [SV * E * Y * S * V, C, H, W]
+        q = q.flatten(0, -4)                          # [QV * E * Y * Q, C, H, W]
+        x = torch.cat([s, q])                         # [150, C, H, W]
+        # print(x.shape)
+        logits = model_lp(x)
+        # print(logits.shape)                 # [SV * E * Y * S * V + QV * E * Y * Q, y_out(train_set.n_class)] 
+        
+        # print(c.shape)
+        # print(c.repeat_interleave(TQ).shape)
+        y_lp = torch.cat([c.flatten(),c.repeat_interleave(TQ)])
+        y_lp = y_lp.cuda()
+        loss = xent_loss(logits, y_lp)
+        acc = utils.accuracy(logits, y_lp)
+        aves['tl'].update(loss.item())
+        aves['ta'].update(acc[0])
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
 
     writer.add_scalar('lr', optimizer.param_groups[0]['lr'], epoch)
 
@@ -307,6 +373,10 @@ if __name__ == '__main__':
   parser.add_argument('--path', 
                       help='the path to saved model', 
                       type=str)
+  parser.add_argument('--stdFT', 
+                      default=False,
+                      help='whether we use standard finetune', 
+                      action='store_true')
   
   args = parser.parse_args()
   config = yaml.load(open(args.config, 'r'), Loader=yaml.FullLoader)
@@ -340,6 +410,11 @@ if __name__ == '__main__':
   if len(args.gpu.split(',')) > 1:
     config['_parallel'] = True
     config['_gpu'] = args.gpu
+  # config['stdFT'] = args.stdFT
+  if config.get('stdFT'):
+    print("standard FT: stdFT: ".format(config['stdFT']))
+  else:
+    config['stdFT'] = False
 
   # utils.set_gpu(args.gpu)
   main(config)

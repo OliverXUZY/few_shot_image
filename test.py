@@ -83,7 +83,16 @@ def main(config):
       'encoder': config['encoder'],
       'encoder_args':  config['encoder_args'],
       }
-    modeldir = 'dinov2' if 'dinov2' in config['encoder'] else 'clip'
+    
+    if 'dinov2' in config['encoder']:
+      modeldir = 'dinov2'
+    elif 'clip' in config['encoder']:
+      modeldir = 'clip'
+    elif 'torchvision' in config['encoder']:
+      modeldir = 'torchvision'
+    else:
+      print("model dir not found for encoder {}!".format(config['encoder']))
+    
     config['path'] = "./save/{}/{}/{}".format(modeldir, config['dataset'].replace('meta-', ''), "original")
     utils.log("construct encoder {} from pre-train".format(config['encoder']))
 

@@ -1,5 +1,6 @@
-dataset: meta-mini-imagenet
+dataset: meta-domain-net
 train_set_args: 
+  root: /srv/home/zxu444/datasets/domainNet/sketch_split
   split: meta-train
   size: 224           # added for ViT
   transform: clip
@@ -10,6 +11,7 @@ train_set_args:
   n_query: 9
   deterministic: True  # whether set images in dataset to be deterministic in each epoch
 val_set_args:
+  root: /srv/home/zxu444/datasets/domainNet/sketch_split
   split: meta-val
   size: 224           # added for ViT
   transform: clip
@@ -22,6 +24,8 @@ val_set_args:
 
 
 encoder: clip_ViT-B32
+stdFT: True
+
 
 # path: ./save/task_samples/task5000/meta-mini-imagenet_ViT-B32_fs-centroid_5y25s_1000size
 # path: ./save/clip/meta-mini-imagenet_RN50_fs-centroid_5y1s_finetune_clip
@@ -36,26 +40,13 @@ classifier_args:
 
 optimizer: sgd
 optimizer_args:
-  lr: 1.e-5 # 0.001
+  lr: 0.01
   momentum: 0.9
   weight_decay: 5.e-6
 
-########### limited number of images per class we get access to
-# save_path: ./save/meta_train_limited/limited10/clip # added for meta_train_limited
-
-########### limited class we get access to, multiple run
-# save_path: ./save/meta_limited_classes/class64/run3
-# seed: 2
-
-########### vary few shot images per task
-# save_path: ./save/few_shot_images/shot5/run3
-
-########### task, samples
-# save_path: ./save/task_samples/task5000
 
 ########### M,m trend
-save_path: ./save/mini-imagenet/Mm_trend
-# save_path: ./save/mini-imagenet/original  # only for testing time
+save_path: ./save/clip/domain-net/stdFT
 
 
 save_epoch: 5
