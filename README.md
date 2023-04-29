@@ -11,6 +11,19 @@
 - [ImageNet-800](http://image-net.org/challenges/LSVRC/2012/)
 
 ### result
+
+#### standard FT
+| Backbone  | dataset |  shot  |Accuracy|
+|------------|--------|--------|-|
+|CLIP-ViT_B32| tiered |    1   |61.20 +- 0.37|
+|            |        |    5   |80.65 +- 0.27|
+|            | mini   |    1   |-|
+|            |        |    5   ||
+|            | domain |    1   |47.72 +- 0.37|
+|            |        |    5   |72.82 +- 0.29|
+
+
+
 #### 5-way accuracy (%) on *mini-ImageNet*
 | Backbone  | Task(M) |shot images|query images|image per task(m)|Accuracy|
 |------------|--------|-----------|------------|-----------------|-|
