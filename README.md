@@ -15,7 +15,7 @@
 #### standard FT
 | Backbone  | dataset |  shot  |Accuracy|
 |------------|--------|--------|-|
-|CLIP-ViT_B32| mini   |    1   |-|
+|CLIP-ViT_B32| mini   |    1   |69.39 +- 0.30|
 |            |        |    5   ||
 |            | tiered |    1   |61.20 +- 0.37|
 |            |        |    5   |80.65 +- 0.27|
