@@ -24,8 +24,11 @@ val_set_args:
 
 
 encoder: torchvision_vit_b_32
-stdFT: True
+LP: False
 
+path: ./save/torchvision/mini-imagenet/stdFT/meta-mini-imagenet_torchvision_vit_b_32_lp_logistic_15y1s_150m_200M
+ckpt: lp_epoch-10.pth
+LP_FT: True
 
 
 classifier: fs-centroid
@@ -33,18 +36,28 @@ classifier_args:
   temp: 10.
   learn_temp: True
 
+lp_optimizer: sgd
+lp_optimizer_args:
+  lr: 1.
+  schedule: step
+  decay_rate: 0.1
+  decay_epochs:
+    - 60
+    - 80
+  momentum: 0.9
+  weight_decay: 0
+lp_n_epochs: 30
+
 optimizer: sgd
 optimizer_args:
-  lr: 0.01
+  lr: 1.e-6 # 0.001
   momentum: 0.9
   weight_decay: 5.e-6
-
+n_epochs: 10
 
 save_path: ./save/torchvision/mini-imagenet/stdFT
 
-
-
-save_epoch: 5
+save_epoch: 10
 V: 1
-n_epochs: 10
+
 

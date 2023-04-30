@@ -13,7 +13,7 @@ val_set_args:
   split: meta-val
   size: 224           # added for ViT
   transform: clip
-  n_batch: 200
+  n_batch: 20 # change later
   n_episode: 1
   n_way: 15
   n_shot: 1
@@ -22,30 +22,41 @@ val_set_args:
 
 
 encoder: clip_ViT-B32
-stdFT: True
 
+LP: True
 
-# path: ./save/task_samples/task5000/meta-mini-imagenet_ViT-B32_fs-centroid_5y25s_1000size
-# path: ./save/tiered-imagenet/Mm_trend/meta-tiered-imagenet_ViT-B32_fs-centroid_15y1s_150m_600M
-# ckpt: epoch-last.pth
-# start_epoch_from: 10
+path: ./save/clip/tiered-imagenet/stdFT/meta-tiered-imagenet_clip_ViT-B32_lp_logistic_15y1s_150m_200M
+ckpt: epoch-50.pth
+LP_FT: False
+
 
 classifier: fs-centroid
 classifier_args:
   temp: 10.
   learn_temp: True
 
+lp_optimizer: sgd
+lp_optimizer_args:
+  lr: 1.
+  schedule: step
+  decay_rate: 0.1
+  decay_epochs:
+    - 60
+    - 80
+  momentum: 0.9
+  weight_decay: 0
+lp_n_epochs: 50
+
 optimizer: sgd
 optimizer_args:
-  lr: 0.01
+  lr: 1.e-6 # 0.001
   momentum: 0.9
   weight_decay: 5.e-6
-
-
+n_epochs: 10
 
 save_path: ./save/clip/tiered-imagenet/stdFT
 
-save_epoch: 5
+save_epoch: 10
 V: 1
-n_epochs: 10
+
 

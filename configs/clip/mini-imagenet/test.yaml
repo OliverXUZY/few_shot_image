@@ -58,10 +58,11 @@ test_set_args:
 # ckpt: max-va.pth
 # ckpt: epoch-last.pth
 
-# encoder: ViT-B32
-encoder: RN50
+encoder: clip_ViT-B32
+# encoder: clip_RN50
 # path: ./save/mini-imagenet/original
-path: ./save/mini-imagenet/Mm_trend/meta-mini-imagenet_RN50_fs-centroid_15y1s_150m_200M
+path: ./save/clip/mini-imagenet/stdFT/meta-mini-imagenet_clip_ViT-B32_lp_logistic_15y1s_150m_200M
+# path: ./save/clip/mini-imagenet/stdFT/meta-mini-imagenet_clip_RN50_lp_logistic_15y1s_150m_200M
 
 
 ckpt: max-va.pth

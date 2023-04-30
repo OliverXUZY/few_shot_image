@@ -12,8 +12,8 @@ test_set_args:
 
 
 encoder: dinov2_vitb14
-path: ./save/dinov2/domain-net/Mm_trend/meta-domain-net_dinov2_vitb14_fs-centroid_15y1s_150m_200M
-
+# path: ./save/dinov2/domain-net/Mm_trend/meta-domain-net_dinov2_vitb14_fs-centroid_15y1s_150m_200M
+path: ./save/dinov2/domain-net/stdFT/meta-domain-net_dinov2_vitb14_lp_logistic_15y1s_150m_200M
 ckpt: max-va.pth
 # ckpt: epoch-last.pth
 

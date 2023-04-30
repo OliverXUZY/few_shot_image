@@ -35,10 +35,9 @@ classifier_args:
 
 optimizer: sgd
 optimizer_args:
-  lr: 2.e-8 # 0.001
+  lr: 1.e-7 # 0.001
   momentum: 0.99
   weight_decay: 0 # 5.e-4
-
 
 
 save_path: ./save/torchvision/tiered-imagenet/Mm_trend

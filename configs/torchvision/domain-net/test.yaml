@@ -12,10 +12,12 @@ test_set_args:
 
 
 encoder: torchvision_vit_b_32
-path: ./save/torchvision/domain-net/Mm_trend/meta-domain-net_torchvision_vit_b_32_fs-centroid_15y1s_150m_200M
+# path: ./save/torchvision/domain-net/Mm_trend/meta-domain-net_torchvision_vit_b_32_fs-centroid_15y1s_150m_200M
+path: ./save/torchvision/domain-net/stdFT/meta-domain-net_torchvision_vit_b_32_lp_logistic_15y1s_150m_200M
 
 # encoder: torchvision_RN50
 # path: ./save/torchvision/domain-net/Mm_trend/meta-domain-net_torchvision_RN50_fs-centroid_15y1s_150m_200M
+# path: ./save/torchvision/domain-net/stdFT/meta-domain-net_torchvision_RN50_lp_logistic_15y1s_150m_200M
 
 ckpt: max-va.pth
 # ckpt: epoch-last.pth
