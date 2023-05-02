@@ -41,7 +41,7 @@ Download datasets with class names: [here](https://lyy.mpi-inf.mpg.de/mtl/downlo
 |CLIP-ViT_B32| 76.62 +- 0.15    |  -          |
 
 #### 50-way accuracy (%) on *tiered-ImageNet*
-1-query image per class, tune with ConLoss, tune vision and text encoder simultaneously.
+1-query image per class, tune with ConLoss, tune vision and text encoder simultaneously, following [Goyal et al.](https://arxiv.org/pdf/2212.00638.pdf)(CVPR 2023).
 | pre-train  | zero-shot NC     | Multi-task finetune + NC |
 |------------|------------------|--------------------------|
 |CLIP-ViT_B32| 84.93 +- 0.76    | 85.44 +- 0.75            |
