@@ -4,18 +4,8 @@
 Download datasets with class names: [here](https://lyy.mpi-inf.mpg.de/mtl/download/Lmzjm9tX.html)
 
 ## Result
-* Evaluation: Nearest-centroids for few-shot task evaluation. In each task, we sample 10 classes, each class contains text features 10-query images.
-* Text encoder: 8 templates adapted from CLIP, was reported to have better performance:
-  ```
-  'a photo of a {}',
-  'itap of a {}.',
-  'a bad photo of the {}.',
-  'a origami {}.',
-  'a photo of the large {}.',
-  'a {} in a video game.',
-  'art of the {}.',
-  'a photo of the small {}.'
-  ```
+* Evaluation: Nearest-centroids for few-shot task evaluation. In each task, we sample 50 classes, each class contains text features and query images.
+
 
   The templates forward through clip text encoder become text features, act as _"shot images"_.
 
@@ -40,13 +30,26 @@ Download datasets with class names: [here](https://lyy.mpi-inf.mpg.de/mtl/downlo
 |------------|------------------|--------------------------|
 |CLIP-ViT_B32| 76.62 +- 0.15    |  -          |
  -->
-#### 50-way accuracy (%) on *tiered-ImageNet*
+#### 160(all)-way accuracy (%) on *tiered-ImageNet*
+* Text encoder: 8 templates adapted from CLIP, was reported to have better performance:
+  ```
+  'a photo of a {}',
+  'itap of a {}.',
+  'a bad photo of the {}.',
+  'a origami {}.',
+  'a photo of the large {}.',
+  'a {} in a video game.',
+  'art of the {}.',
+  'a photo of the small {}.'
+  ```
 1-query image per class, tune with ConLoss, tune vision and text encoder simultaneously, following [Goyal et al.](https://arxiv.org/pdf/2212.00638.pdf)(CVPR 2023).
 | pre-train  | zero-shot NC     | Multi-task finetune + NC |
 |------------|------------------|--------------------------|
 |CLIP-ViT_B32| 84.93 +- 0.76    | 85.44 +- 0.75            |
 
-#### 50-way accuracy (%) on *domainNet*
+#### 100(all)-way accuracy (%) on *domainNet*
+Text encoder: one template:`'a photo of a {}'`
+
 1-query image per class, tune with cross entropy loss, tune vision encoder and fix text encoder.
 | pre-train  | zero-shot NC     | Multi-task finetune + NC |
 |------------|------------------|--------------------------|
@@ -55,6 +58,8 @@ Download datasets with class names: [here](https://lyy.mpi-inf.mpg.de/mtl/downlo
 
 ### Follow [CoCoOp](https://arxiv.org/pdf/2203.05557.pdf)
 #### test accuracy (%) on *tiered-ImageNet*
+Text encoder: one template:`'a photo of a {}'`
+
 Testing based on all images (160 classes, 206,209 images)
 | pre-train  | zero-shot NC     | Multi-task finetune + NC |
 |------------|------------------|--------------------------|
