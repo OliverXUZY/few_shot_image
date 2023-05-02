@@ -45,6 +45,14 @@ Download datasets with class names: [here](https://lyy.mpi-inf.mpg.de/mtl/downlo
 | pre-train  | zero-shot NC     | Multi-task finetune + NC |
 |------------|------------------|--------------------------|
 |CLIP-ViT_B32| 84.93 +- 0.76    | 85.44 +- 0.75            |
+
+#### 50-way accuracy (%) on *domainNet*
+1-query image per class, tune with cross entropy loss, tune vision encoder and fix text encoder.
+| pre-train  | zero-shot NC     | Multi-task finetune + NC |
+|------------|------------------|--------------------------|
+|CLIP-ViT_B32| 64.54 +- 0.21    | 66.19 +- 0.21            |
+
+
 ### Examples
 train 50-way tiered-imagenet
 ```
