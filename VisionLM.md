@@ -19,7 +19,7 @@ Download datasets with class names: [here](https://lyy.mpi-inf.mpg.de/mtl/downlo
 
   The templates forward through clip text encoder become text features, act as _"shot images"_.
 
-### 15 query images per class
+<!-- ### 15 query images per class -->
 
 
 <!-- #### 15-way accuracy (%) on *mini-ImageNet*
@@ -28,18 +28,18 @@ Download datasets with class names: [here](https://lyy.mpi-inf.mpg.de/mtl/downlo
 |CLIP-ViT_B32| 93.14 +- 0.04    |  93.49 +- 0.04           | -->
 
 
-#### 15-way accuracy (%) on *tiered-ImageNet*
+<!-- #### 15-way accuracy (%) on *tiered-ImageNet*
 | pre-train  | zero-shot NC     | Multi-task finetune + NC |
 |------------|------------------|--------------------------|
 |CLIP-ViT_B32| 76.64 +- 0.08   |  69.80 +- 0.17           |  
+ -->
 
-
-### 2 query images per class
+<!-- ### 2 query images per class
 #### 100-way accuracy (%) on *tiered-ImageNet*
 | pre-train  | zero-shot NC     | Multi-task finetune + NC |
 |------------|------------------|--------------------------|
 |CLIP-ViT_B32| 76.62 +- 0.15    |  -          |
-
+ -->
 #### 50-way accuracy (%) on *tiered-ImageNet*
 1-query image per class, tune with ConLoss, tune vision and text encoder simultaneously, following [Goyal et al.](https://arxiv.org/pdf/2212.00638.pdf)(CVPR 2023).
 | pre-train  | zero-shot NC     | Multi-task finetune + NC |
@@ -52,6 +52,13 @@ Download datasets with class names: [here](https://lyy.mpi-inf.mpg.de/mtl/downlo
 |------------|------------------|--------------------------|
 |CLIP-ViT_B32| 64.54 +- 0.21    | 66.19 +- 0.21            |
 
+
+### Follow [CoCoOp](https://arxiv.org/pdf/2203.05557.pdf)
+#### test accuracy (%) on *tiered-ImageNet*
+Testing based on all images (160 classes, 206,209 images)
+| pre-train  | zero-shot NC     | Multi-task finetune + NC |
+|------------|------------------|--------------------------|
+|CLIP-ViT_B32| 69.9            | 71.4            |
 
 ### Examples
 train 50-way tiered-imagenet
@@ -80,10 +87,3 @@ inside `~/datasets/tiered-imagenet/tiered_imagenet`
 ./test
 
 ```
-
-# Follow [CoCoOp](https://arxiv.org/pdf/2203.05557.pdf)
-#### test accuracy (%) on *tiered-ImageNet*
-Testing based on all images (160 classes, 206,209 images)
-| pre-train  | zero-shot NC     | Multi-task finetune + NC |
-|------------|------------------|--------------------------|
-|CLIP-ViT_B32| 70.31            | -            |
