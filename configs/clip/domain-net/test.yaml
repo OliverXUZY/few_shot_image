@@ -7,7 +7,7 @@ test_set_args:
   n_batch: 150
   n_episode: 1
   n_way: 15
-  n_shot: 5
+  n_shot: 1
   n_query: 15
 
 

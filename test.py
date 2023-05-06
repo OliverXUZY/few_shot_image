@@ -30,6 +30,8 @@ def main(config):
   ##### Dataset #####
   # V = config['test_set_args']['n_view'] = config['V']
   # config['test_set_args']['n_meta_view'] = 1
+
+
   test_set = datasets.make(config['dataset'], **config['test_set_args'])
   utils.log('test dataset: {} (x{}), {}'.format(
     test_set[0][0].shape, len(test_set), test_set.n_class), filename='test.txt')
@@ -45,6 +47,7 @@ def main(config):
   y = y.cuda()                # [E * Y * Q]
 
   test_loader = DataLoader(test_set, E, num_workers=8, pin_memory=True)
+
 
   ##### Model #####
   if config.get('ckpt'):
@@ -90,6 +93,8 @@ def main(config):
       modeldir = 'clip'
     elif 'torchvision' in config['encoder']:
       modeldir = 'torchvision'
+    elif 'mocov3' in config['encoder']:
+      modeldir = 'mocov3'
     else:
       print("model dir not found for encoder {}!".format(config['encoder']))
     
@@ -104,6 +109,7 @@ def main(config):
   if config.get('_parallel'):
     model.enc = nn.DataParallel(model.enc)
 
+  utils.make_path(config['path'])
   utils.set_log_path(config['path'])
 
   timer_elapsed, timer_epoch = utils.Timer(), utils.Timer()
@@ -157,9 +163,15 @@ if __name__ == '__main__':
   parser.add_argument('--path', 
                       help='the path to saved model', 
                       type=str)
+  parser.add_argument('--save_path', 
+                      help='the path from home to saved model', 
+                      type=str)
   parser.add_argument('--exp', 
                       help='type of experiments', 
                       type=str, default='Mm_trend')
+  parser.add_argument('--n_shot',
+                      help='num shot',
+                      type=int)
   args = parser.parse_args()
   config = yaml.load(open(args.config, 'r'), Loader=yaml.FullLoader)
 
@@ -167,6 +179,12 @@ if __name__ == '__main__':
     config['path'] = "./save/{}/{}/{}".format(config['dataset'].replace('meta-', ''), args.exp, args.path)
     utils.log("load model from path: {}".format(config['path']))
   # print("zhuoyan: ", config['path'])
+  if args.save_path:
+    config['path'] = args.save_path
+    utils.log("load model from path: {}".format(config['path']))
+  
+  if args.n_shot:
+    config['test_set_args']['n_shot'] = int(args.n_shot)
 
   if len(args.gpu.split(',')) > 1:
     config['_parallel'] = True
