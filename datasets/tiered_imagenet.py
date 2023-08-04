@@ -58,8 +58,8 @@ class TieredImageNet(Dataset):
     self.label = new_label
     self.n_class = len(label_key)
 
-    self.statistics = {'mean': [0.478, 0.456, 0.410],
-                       'std':  [0.279, 0.274, 0.286]}
+    self.statistics = {'mean': [0.485, 0.456, 0.406],
+                       'std': [0.229, 0.224, 0.225]}
     transform = get_transform(transform, size, self.statistics)
     self.transform = MultiViewTransform(transform, n_view)
 
@@ -132,6 +132,86 @@ class MetaTieredImageNet(TieredImageNet):
     cats = np.random.choice(self.n_class, self.n_way, replace=False)
     for c in cats:
       idx = np.random.choice(self.catlocs[c], sv * s + qv * q, replace=False)
+      s_idx, q_idx = idx[:sv * s], idx[-qv * q:]
+      c_shot = torch.stack([self.transform(self.data[i]) for i in s_idx])
+      c_query = torch.stack([self.val_transform(self.data[i]) for i in q_idx])
+      c_shot = c_shot.view(sv, s, *c_shot.shape[-4:])
+      c_query = c_query.view(qv, q, *c_query.shape[-3:])
+      shot += (c_shot,)
+      query += (c_query,)
+    
+    shot = torch.cat(shot, dim=1)      # [SV, Y * S, V, C, H, W]
+    query = torch.cat(query, dim=1)    # [QV, Y * Q, C, H, W]
+    cats = torch.from_numpy(cats)
+    return shot, query, cats
+  
+@register('seq-meta-tiered-imagenet')
+class SeqMetaTieredImageNet(MetaTieredImageNet):
+  def __init__(self, root, split='meta-train', size=84, 
+               n_view=1, n_meta_view=1, share_query=False,
+               transform=None, val_transform=None,
+               n_batch=200, n_episode=4, n_way=5, n_shot=1, n_query=15, deterministic = False):
+    """
+    Args:
+      root (str): root path of dataset.
+      split (str): dataset split. Default: 'train'
+      size (int): image resolution. Default: 84
+      n_view (int): number of augmented views of image. Default: 1
+      n_meta_view (int): number of augmented views of task. Default: 1
+      share_query (bool): True if use distinct query set for each meta-view. 
+        Default: False
+      transform (str): training data augmentation. Default: None
+      val_transform (str): validation data augmentation. Default: None
+      n_batch (int): number of mini-batches per epoch. Default: 200
+      n_episode (int): number of episodes (tasks) per mini-batch. Default: 4
+      n_way (int): number of categories per episode. Default: 5
+      n_shot (int): number of training (support) samples per category. 
+        Default: 1
+      n_query (int): number of validation (query) samples per category. 
+        Default: 15
+      deterministic: whether set images in dataset to be deterministic in each epoch
+    """
+    super().__init__(root, split, size, 
+               n_view, n_meta_view, share_query,
+               transform, val_transform,
+               n_batch, n_episode, n_way, n_shot, n_query, deterministic)
+    
+    # in seq loader, idx within each class is recorded
+    self.idx_within_class = np.zeros(self.n_class)
+
+  def __getitem__(self, index):
+    if self.deterministic:
+      np.random.seed(index)  ## add for control # of tasks and # of images
+    s, q = self.n_shot, self.n_query
+    sv, qv = self.n_shot_view, self.n_query_view
+    shot, query = tuple(), tuple()
+    print("zhuoyan: this is outer index======: ", index)
+
+    if (index + 1) * self.n_way % self.n_class <= index * self.n_way % self.n_class:
+        cats = (np.concatenate([np.arange(index* self.n_way % self.n_class, self.n_class), np.arange((index + 1) * self.n_way % self.n_class)]))
+    else:
+        cats = (np.arange(index * self.n_way % self.n_class, (index+ 1) * self.n_way % self.n_class))
+      
+    print("This is cats: ====", cats)
+    
+    # cats = np.random.choice(self.n_class, self.n_way, replace=False)
+    for c in cats:
+      batch_size = sv * s + qv * q
+      total_size = len(self.catlocs[c])
+      index_per_class = self.idx_within_class[c]
+      print("zhuoyan: this is class {} with index_per_class======: {}".format(c, index_per_class))
+
+      if (index_per_class + 1) * batch_size % total_size <= index_per_class * batch_size % total_size:
+        idx = self.catlocs[c][np.concatenate([np.arange(index_per_class* batch_size % total_size, total_size, dtype=int), np.arange((index_per_class + 1) * batch_size % total_size, dtype=int)])]
+      else:
+        print("zhuoyannn: {} to {}".format(index_per_class * batch_size % total_size, (index_per_class+ 1) * batch_size % total_size) )
+        print(np.arange(index_per_class * batch_size % total_size, (index_per_class+ 1) * batch_size % total_size, dtype=int))
+        idx = self.catlocs[c][np.arange(index_per_class * batch_size % total_size, (index_per_class+ 1) * batch_size % total_size, dtype=int)]
+      
+      # idx = np.random.choice(self.catlocs[c], sv * s + qv * q, replace=False)
+      print(idx)
+      self.idx_within_class[c] += 1
+
       s_idx, q_idx = idx[:sv * s], idx[-qv * q:]
       c_shot = torch.stack([self.transform(self.data[i]) for i in s_idx])
       c_query = torch.stack([self.val_transform(self.data[i]) for i in q_idx])

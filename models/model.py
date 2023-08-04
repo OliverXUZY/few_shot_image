@@ -2,7 +2,7 @@ import torch
 import torch.nn.functional as F
 import torch.distributions as ds
 import torch.autograd as autograd
-
+import time
 from .modules import Module
 
 
@@ -12,10 +12,15 @@ class Model(Module):
     
     self.enc = enc    # encoder
     self.head = head  # classifier / projector
+    # self.head = self.head.half()
 
   def _std_forward(self, x):
     assert x.dim() == 4                             # [B, C, H, W]
+    # print(x.dtype)
     x = self.enc(x)
+    # print("model x : ", x.dtype)
+    # print("model: ", self.head.clf.weight.dtype)
+    x = x.float()
     logits = self.head(x)
     return logits
 
@@ -83,6 +88,8 @@ class Model(Module):
     QV, _, YQ = q.shape[:-3]
     YSV, Q = Y * S * V, YQ // Y
 
+    # timer= time.time()
+
     if task2vec:
       s = s.flatten(1, -4)                          # [SV, E * Y * S * V, C, H, W]
       q = q.flatten(1, -4)                          # [QV, E * Y * Q, C, H, W]
@@ -94,12 +101,15 @@ class Model(Module):
       q = q.flatten(0, -4)                          # [QV * E * Y * Q, C, H, W]
       x = torch.cat([s, q])
       x = self.enc(x)
+    # print("vision encoder done!, {} s".format(time.time() - timer))
+    # timer= time.time()
     
     s, q = x[:SV*E*YSV], x[-QV*E*YQ:]
     s = s.view(SV, E, Y, S, V, -1)                  # [SV, E, Y, S, V, D]
     q = q.view(QV, E, YQ, -1)                       # [QV, E, Y * Q, D]
     
     logits = self.head(s, q)                        # [SV, E, Y * Q, Y]
+    # print("vision clf done!, {} s".format(time.time() - timer))
 
     # computes task embeddings
     vecs = None

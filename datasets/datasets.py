@@ -17,7 +17,7 @@ def register(name):
 
 def make(name, **kwargs):
   if kwargs.get('root') is None:
-    kwargs['root'] = os.path.join(DEFAULT_ROOT, name.replace('meta-', ''))  # update for unsup-meta-mini-imagenet
+    kwargs['root'] = os.path.join(DEFAULT_ROOT, name.replace('meta-', '').replace('seq-',''))  # update for unsup-meta-mini-imagenet
   dataset = datasets[name](**kwargs)
   return dataset
 

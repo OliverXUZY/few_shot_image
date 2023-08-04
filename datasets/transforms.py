@@ -129,6 +129,21 @@ def get_transform(name, size, statistics=None):
       transforms.ToTensor(),
       transforms.Normalize(**statistics),
     ])
+  elif name == 'mocov3':
+    # roughly copied from mocov3/main_moco.py line 262:  https://github.com/facebookresearch/moco-v3/blob/c349e6e24f40d3fedb22d973f92defa4cedf37a7/main_moco.py#L262
+    # follow BYOL's augmentation recipe: https://arxiv.org/abs/2006.07733
+    augmentation1 = [
+        transforms.RandomResizedCrop(224, scale=(.2, 1.)),
+        transforms.RandomApply([
+            transforms.ColorJitter(0.4, 0.4, 0.2, 0.1)  # not strengthened
+        ], p=0.8),
+        transforms.RandomGrayscale(p=0.2),
+        transforms.RandomApply([GaussianBlur([.1, 2.])], p=0.1),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize(**statistics)
+    ]
+    return transforms.Compose(augmentation1)
   elif name is None:
     return transforms.Compose([
       transforms.Resize(size),

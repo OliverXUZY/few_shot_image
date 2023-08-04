@@ -35,8 +35,10 @@ class MetaDomainNet(Dataset):
     print(split_dir)
     assert os.path.isdir(split_dir)
     
-    self.statistics = {'mean': [0.471, 0.450, 0.403],
-                       'std':  [0.278, 0.268, 0.284]}
+    # self.statistics = {'mean': [0.471, 0.450, 0.403],
+    #                    'std':  [0.278, 0.268, 0.284]}
+    self.statistics = {'mean': [0.485, 0.456, 0.406],
+                       'std': [0.229, 0.224, 0.225]}
     
     self.transform = get_transform(transform, size, self.statistics)
 
@@ -85,6 +87,8 @@ class MetaDomainNet(Dataset):
     return self.n_batch * self.n_episode
 
   def __getitem__(self, index):
+    if self.deterministic:
+      np.random.seed(index)  ## add for control # of tasks and # of images
     s, q = self.n_shot, self.n_query
     sv, qv = 1, 1
     shot, query = tuple(), tuple()
@@ -93,6 +97,8 @@ class MetaDomainNet(Dataset):
     for c in cats:
       idx = np.random.choice(self.catlocs[c], sv * s + qv * q, replace=False)      # random choose n_shot*shot_view + n_query*query_view (1*1+15*1) images in each classes
       s_idx, q_idx = idx[:sv * s], idx[-qv * q:]
+      # print([self.transform(self.dataset[i][0]).shape for i in s_idx])
+      # print([self.transform(self.dataset[i][0]).shape for i in q_idx])
       c_shot = torch.stack([self.transform(self.dataset[i][0]) for i in s_idx])          # [5(1),3,84,84] [S*SV, C, H ,W]
       c_query = torch.stack([self.transform(self.dataset[i][0]) for i in q_idx])         # [15,3,84,84] [Q*QV, C, H ,W]
       c_shot = c_shot.view(sv, s, 1, *c_shot.shape[-3:])   # hard code V = 1             # [1,5(1),1,3,84,84] [SV, S, V, C, H ,W]

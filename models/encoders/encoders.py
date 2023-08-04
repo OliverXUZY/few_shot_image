@@ -11,12 +11,16 @@ def register(name):
 
 
 def make(name, **kwargs):
+  # for key, val in models.items():
+    # print(key)
+    # print(val)
+    # print("zhuyan: ")
   if name is None:
     return None
   try:
     enc = models[name](**kwargs)
   except:
-    raise ValueError('unsupported encoder: {}'.format('name'))
+    raise ValueError('unsupported encoder: {}'.format(name))
   if torch.cuda.is_available():
     enc.cuda()
   return enc
