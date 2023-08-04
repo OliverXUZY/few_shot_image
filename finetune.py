@@ -119,10 +119,13 @@ def main(config):
   timer_elapsed, timer_epoch = utils.Timer(), utils.Timer()
 
   
-  ckpt_name = '{}_{}_{}_{}y{}s_{}m_{}M'.format(
-    config['dataset'], ckpt['encoder'], config['classifier'],
-    config['train_set_args']['n_way'], config['train_set_args']['n_shot'], 
-    (config['train_set_args']['n_shot'] + config['train_set_args']['n_query']) * config['train_set_args']['n_way'],
+  ckpt_name = '{}_{}_{}_{}y{}s{}q_{}m_{}M'.format(
+    config['dataset'], ckpt['encoder'], 
+    config['classifier'],
+    config['train_set_args']['n_way'], 
+    config['train_set_args']['n_shot']*config['train_set_args']['n_episode'], 
+    config['train_set_args']['n_query']*config['train_set_args']['n_episode'],
+    (config['train_set_args']['n_shot'] + config['train_set_args']['n_query']) * config['train_set_args']['n_way'] * config['train_set_args']['n_episode'],
     config['train_set_args']['n_batch']
   )
 
@@ -300,17 +303,32 @@ if __name__ == '__main__':
   parser.add_argument('--efficient', 
                       help='if True, enables gradient checkpointing',
                       action='store_true')
+  parser.add_argument('--n_way',
+                      help='num of classes',
+                      type=int)
   parser.add_argument('--n_batch_train',
                       help='modify batch train num batch',
                       type=int)
   parser.add_argument('--n_shot',
-                      help='num shot',
+                      help='num shot in train args',
+                      type=int)
+  parser.add_argument('--n_query',
+                      help='num query in train args',
                       type=int)
   parser.add_argument('--sample_per_task',
                       help='sample_per_task',
                       type=int)
+  parser.add_argument('--n_episode',
+                      help='n episode',
+                      type=int)
+  parser.add_argument('--lr',
+                      help='learning rate',
+                      type=float)
   parser.add_argument('--path', 
                       help='the path to saved model', 
+                      type=str)
+  parser.add_argument('--output_path', 
+                      help='the path to save the output', 
                       type=str)
   parser.add_argument('--stdFT', 
                       default=False,
@@ -334,11 +352,25 @@ if __name__ == '__main__':
 
   if args.n_batch_train:
     config['train_set_args']['n_batch'] = int(args.n_batch_train)
+  if args.n_way:
+    config['train_set_args']['n_way'] = int(args.n_way)
+    config['val_set_args']['n_way'] = int(args.n_way)
   if args.n_shot:
     config['train_set_args']['n_shot'] = int(args.n_shot)
+  if args.n_query:
+    config['train_set_args']['n_query'] = int(args.n_query)
   if args.sample_per_task:
     config['train_set_args']['n_query'] = int(args.sample_per_task/config['train_set_args']['n_way'] - args.n_shot)
-  
+  if args.n_episode:
+    config['train_set_args']['n_episode'] = int(args.n_episode)
+    config['optimizer_args']['lr'] = config['optimizer_args']['lr'] * int(args.n_episode)
+  if args.lr:
+    config['optimizer_args']['lr'] = args.lr
+
+  if args.output_path:
+    config['save_path'] = args.output_path
+    utils.log("the output path: {}".format(config['save_path']))
+
     
   utils.log('{}y{}s_{}m_{}M'.format(
     config['train_set_args']['n_way'], 
@@ -349,6 +381,12 @@ if __name__ == '__main__':
   if len(args.gpu.split(',')) > 1:
     config['_parallel'] = True
     config['_gpu'] = args.gpu
+  
+  device_count = torch.cuda.device_count()
+  if device_count > 1:
+      print(f"Multiple GPUs detected (n_gpus={device_count}), use all of them!")
+      config['_parallel'] = True
+        
 
   # utils.set_gpu(args.gpu)
   main(config)

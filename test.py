@@ -95,6 +95,8 @@ def main(config):
       modeldir = 'torchvision'
     elif 'mocov3' in config['encoder']:
       modeldir = 'mocov3'
+    elif 'dino_vit' in config['encoder']:
+      modeldir = 'dino'
     else:
       print("model dir not found for encoder {}!".format(config['encoder']))
     
@@ -115,10 +117,11 @@ def main(config):
   timer_elapsed, timer_epoch = utils.Timer(), utils.Timer()
 
   ##### Evaluation #####
-  utils.log('{}_{}_{}y{}s:'.format(
+  utils.log('{}_{}_{}_{}y{}s:'.format(
+    config['dataset'],
     config['encoder'],
     config['classifier'], 
-      config['test_set_args']['n_way'], config['test_set_args']['n_shot']), filename='test.txt')
+    config['test_set_args']['n_way'], config['test_set_args']['n_shot']), filename='test.txt')
 
   model.eval()
   aves_keys = ['va']
@@ -172,11 +175,28 @@ if __name__ == '__main__':
   parser.add_argument('--n_shot',
                       help='num shot',
                       type=int)
+  parser.add_argument('--n_way',
+                      help='num of classes',
+                      type=int)
   args = parser.parse_args()
   config = yaml.load(open(args.config, 'r'), Loader=yaml.FullLoader)
 
+  if 'dinov2' in config['encoder']:
+    modeldir = 'dinov2'
+  elif 'clip' in config['encoder']:
+    modeldir = 'clip'
+  elif 'torchvision' in config['encoder']:
+    modeldir = 'torchvision'
+  elif 'mocov3' in config['encoder']:
+    modeldir = 'mocov3'
+
   if args.path:  # customized saved path here
-    config['path'] = "./save/{}/{}/{}".format(config['dataset'].replace('meta-', ''), args.exp, args.path)
+    config['path'] = "./save/{}/{}/{}/{}".format(
+      modeldir,
+      config['dataset'].replace('meta-', ''), 
+      args.exp, 
+      args.path
+      )
     utils.log("load model from path: {}".format(config['path']))
   # print("zhuoyan: ", config['path'])
   if args.save_path:
@@ -185,6 +205,8 @@ if __name__ == '__main__':
   
   if args.n_shot:
     config['test_set_args']['n_shot'] = int(args.n_shot)
+  if args.n_way:
+    config['test_set_args']['n_way'] = int(args.n_way)
 
   if len(args.gpu.split(',')) > 1:
     config['_parallel'] = True
