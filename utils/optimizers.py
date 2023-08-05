@@ -20,6 +20,12 @@ def make(name, params, **kwargs):
       betas=(kwargs.get('beta1') or 0.9, kwargs.get('beta2') or 0.999),
       weight_decay=(kwargs.get('weight_decay') or 0.)
     )
+  elif name == 'adamW':
+    optimizer = optim.AdamW(
+      params, lr=kwargs['lr'], 
+      betas=(kwargs.get('beta1') or 0.9, kwargs.get('beta2') or 0.999),
+      weight_decay=(kwargs.get('weight_decay') or 0.)
+    )
   else:
     raise ValueError('invalid optimizer: {}'.format(name))
   return optimizer

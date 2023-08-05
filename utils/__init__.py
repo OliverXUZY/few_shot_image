@@ -32,6 +32,10 @@ def ensure_path(path, remove=True):
   else:
     os.makedirs(path)
 
+def make_path(path):
+  if not os.path.exists(path):
+    os.makedirs(path)
+
 
 def set_log_path(path):
   global _log_path
