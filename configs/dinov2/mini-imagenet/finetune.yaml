@@ -1,6 +1,6 @@
 dataset: meta-mini-imagenet
 train_set_args: 
-  split: meta-train
+  split: meta_train_limited_class8
   size: 224           # added for ViT
   transform: dinov2
   val_transform: dinov2

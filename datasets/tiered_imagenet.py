@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 @register('tiered-imagenet')
 class TieredImageNet(Dataset):
-  def __init__(self, root, split='train', size=84, n_view=1, transform=None):
+  def __init__(self, root, split='train', size=84, n_view=1, transform=None, limited_class = None):
     """
     Args:
       root (str): root path of dataset.
@@ -58,6 +58,18 @@ class TieredImageNet(Dataset):
     self.label = new_label
     self.n_class = len(label_key)
 
+    ##
+    if limited_class:
+      if isinstance(limited_class, float):
+        if limited_class >= 1:
+          num_classes = limited_class
+        else:
+          num_classes = int(self.n_class*limited_class)
+      else:
+        raise ValueError("limited_class is none, but is neither an integer nor a float")
+      self.n_class = np.random.choice(self.n_class, num_classes, replace=False)
+    print("limited accessed classes to {}".format(self.n_class))
+
     self.statistics = {'mean': [0.485, 0.456, 0.406],
                        'std': [0.229, 0.224, 0.225]}
     transform = get_transform(transform, size, self.statistics)
@@ -77,7 +89,7 @@ class MetaTieredImageNet(TieredImageNet):
   def __init__(self, root, split='meta-train', size=84, 
                n_view=1, n_meta_view=1, share_query=False,
                transform=None, val_transform=None,
-               n_batch=200, n_episode=4, n_way=5, n_shot=1, n_query=15, deterministic = False):
+               n_batch=200, n_episode=4, n_way=5, n_shot=1, n_query=15, deterministic = False,limited_class = None):
     """
     Args:
       root (str): root path of dataset.
@@ -227,6 +239,9 @@ class SeqMetaTieredImageNet(MetaTieredImageNet):
 
 ######################################################################################################################
 ########################################## vision language dataset
+'''
+
+
 from torchvision.datasets import ImageFolder
 
 data_root = "/srv/home/zxu444/datasets"
@@ -326,3 +341,5 @@ class VLMetaTieredImageNet(Dataset):
     cats = torch.from_numpy(cats)
     
     return query, cats, label_names
+
+'''

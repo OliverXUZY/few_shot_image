@@ -128,6 +128,8 @@ def main(config):
     (config['train_set_args']['n_shot'] + config['train_set_args']['n_query']) * config['train_set_args']['n_way'] * config['train_set_args']['n_episode'],
     config['train_set_args']['n_batch']
   )
+  if config['train_set_args']['limited_class']:
+    ckpt_name += "class{}".format(int(config['train_set_args']['limited_class']))
 
   if args.tag is not None:
     ckpt_name += '[' + args.tag + ']'
@@ -334,6 +336,11 @@ if __name__ == '__main__':
                       default=False,
                       help='whether we use standard finetune', 
                       action='store_true')
+  parser.add_argument('--limited_class', 
+                      default=float,
+                      help='number of accessed classes', 
+                      )
+  
   
   args = parser.parse_args()
   config = yaml.load(open(args.config, 'r'), Loader=yaml.FullLoader)
@@ -371,7 +378,9 @@ if __name__ == '__main__':
     config['save_path'] = args.output_path
     utils.log("the output path: {}".format(config['save_path']))
 
-    
+  if args.limited_class:
+    config['train_set_args']['limited_class'] = float(args.limited_class)
+
   utils.log('{}y{}s_{}m_{}M'.format(
     config['train_set_args']['n_way'], 
     config['train_set_args']['n_shot'], 
