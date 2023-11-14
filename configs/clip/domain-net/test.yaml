@@ -4,7 +4,7 @@ test_set_args:
   split: meta-test
   size: 224                 
   transform: clip
-  n_batch: 150
+  n_batch: 100
   n_episode: 2
   n_way: 15
   n_shot: 1
@@ -24,7 +24,8 @@ encoder: clip_ViT-B32
 # path: ./save/clip/mini-imagenet/stdFT/meta-mini-imagenet_clip_ViT-B32_lp_logistic_15y1s_150m_100M
 # ckpt: max-va.pth
 # ckpt: epoch-last.pth
-
+path: ./save/clip/domain-net/meta-domain-net_clip_ViT-B32_fs-centroid_15y2s18q_300m_100M
+ckpt: max-va.pth
 
 classifier: fs-centroid
 classifier_args:

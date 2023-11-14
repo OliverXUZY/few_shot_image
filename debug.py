@@ -30,31 +30,11 @@ def main(config):
   # torch.backends.cudnn.benchmark = True
   # torch.backends.cudnn.deterministic = True
 
-  ##### Dataset #####
-  
-  # V = config['train_set_args']['n_view'] = config['V']
-  # SV = config['train_set_args']['n_meta_view'] = 1
-  V = SV = 1
-
-  # meta-train
-  train_set = datasets.make(config['dataset'], **config['train_set_args'])
-#   utils.log('meta-train dataset: split-{} {} (x{}), {}'.format(config['train_set_args']['split'],
-#     train_set[0][0].shape, len(train_set), train_set.n_class))
-  
-  TE = train_set.n_episode
-  TY = train_set.n_way
-  TS = train_set.n_shot
-  TQ = train_set.n_query
-
-  # query-set labels
-  y = torch.arange(TY)[:, None]
-  y = y.repeat(TE, SV, TQ).flatten()      # [TE * SV * TY * TQ]
-  y = y.cuda()
-
-  train_loader = DataLoader(train_set, TE, num_workers=8, pin_memory=True)
-
-  for i in range(200):
-    train_set[i]
+  #### model
+  ckpt = torch.load(os.path.join(config['lp_path'], config['lp_ckpt']))  
+  for key,val in ckpt.items():
+    print(key)
+    print(val)
   
 
 if __name__ == '__main__':
