@@ -9,7 +9,7 @@ from ..modules import *
 
 import torchvision
 
-__all__ = ['clip_RN50', 'ResNet50_mocov2', 'torchvision_RN50', 'mocov3_RN50']
+__all__ = ['clip_RN50', 'ResNet50_mocov2', 'torchvision_RN50', 'mocov3_RN50', 'torchvision_RN18']
 
 @register('clip_RN50')
 class clip_RN50(Module):
@@ -154,3 +154,29 @@ class mocov3_RN50(Module):
         return self.model(x)
 
 
+@register('torchvision_RN18')
+class torchvision_RN18(Module):
+    '''
+    RN18 encoder pre-trained by torchvision
+    '''
+    def __init__(self):
+        super(torchvision_RN18, self).__init__()
+
+        self.out_dim = 512
+
+        weights = torch.hub.load("pytorch/vision", "get_weight", name="ResNet50_Weights.IMAGENET1K_V2")
+
+        self.model = torchvision.models.resnet18(pretrained=True)
+        self.model.fc = nn.Identity() # replace last nn.Linear(2048, 1000) to Identity()
+
+    def get_out_dim(self):
+        return self.out_dim
+    
+    def forward(self, x):
+        '''
+        input size: [Batch_size, 3, 224, 224]
+        output size: [Batch_size, embd_dim]
+        '''
+        assert x.dim() == 4        # [Batch_size, 3, 224, 224]
+
+        return self.model(x)

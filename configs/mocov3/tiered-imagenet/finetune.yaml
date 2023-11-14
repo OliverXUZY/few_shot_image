@@ -50,8 +50,9 @@ optimizer_args:
 
 
 ########### M,m trend
-save_path: ./save/mocov3/tiered-imagenet/Mm_trend
+# save_path: ./save/mocov3/tiered-imagenet/Mm_trend
 
+save_path: ./save/mocov3/tiered-imagenet/sample_complex
 
 save_epoch: 5
 V: 1

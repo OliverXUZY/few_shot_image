@@ -57,7 +57,8 @@ def main(config):
   eval_val = False
   if config.get('val_set_args'):
     eval_val = True
-    val_set = datasets.make(config['dataset'], **config['val_set_args'])
+    val_dataset = config.get('val_dataset') or config.get('dataset')
+    val_set = datasets.make(val_dataset, **config['val_set_args'])
     utils.log('meta-val dataset: {} (x{}), {}'.format(
       val_set[0][0].shape, len(val_set), val_set.n_class))
 
@@ -95,7 +96,9 @@ def main(config):
   config['classifier_args']['in_dim'] = enc.get_out_dim()
   clf = classifiers.make(config['classifier'], **config['classifier_args'])
   
+
   model = models.Model(enc, clf)
+  model = model.cuda()
 
 
   ##### Optimizer #####
@@ -128,7 +131,7 @@ def main(config):
     (config['train_set_args']['n_shot'] + config['train_set_args']['n_query']) * config['train_set_args']['n_way'] * config['train_set_args']['n_episode'],
     config['train_set_args']['n_batch']
   )
-  if config['train_set_args']['limited_class']:
+  if config['train_set_args'].get('limited_class'):
     ckpt_name += "class{}".format(int(config['train_set_args']['limited_class']))
 
   if args.tag is not None:
@@ -140,6 +143,7 @@ def main(config):
     ckpt_path = os.path.join('./save/clip', ckpt_name)
   if not config.get('path'):
     utils.ensure_path(ckpt_path)
+  utils.make_path(ckpt_path)
   utils.set_log_path(ckpt_path)
   
   utils.log("save to path: {}".format(ckpt_path))
@@ -201,7 +205,11 @@ def main(config):
 
       s = s.cuda(non_blocking=True)             # [TE, SV, TY * TS, V, C, H, W]
       q = q.cuda(non_blocking=True)             # [TE, SV, TY * TQ, C, H, W]
+      # print("zhuoyan========================")
+      # print("before: ",s.shape)
       s = s.view(TE, SV, TY, TS, *s.shape[-4:]) # [TE, SV, TY, TS, V, C, H, W]
+      # print("after: ", s.shape)
+      # assert False
       
       logits, _ = model(s, q)
       logits = logits.flatten(0, -2)            # [TE * SV * TY * TQ, TY]
@@ -337,7 +345,7 @@ if __name__ == '__main__':
                       help='whether we use standard finetune', 
                       action='store_true')
   parser.add_argument('--limited_class', 
-                      default=float,
+                      default=None,
                       help='number of accessed classes', 
                       )
   

@@ -1,0 +1,8 @@
+meta-tiered-imagenet_mocov3_vit_fs-centroid_5y1s9q_50m_400M
+meta-tiered-imagenet_mocov3_vit_fs-centroid_5y2s18q_100m_200M
+meta-tiered-imagenet_mocov3_vit_fs-centroid_5y3s27q_150m_133M
+meta-tiered-imagenet_mocov3_vit_fs-centroid_5y4s36q_200m_100M
+meta-tiered-imagenet_mocov3_vit_fs-centroid_5y1s9q_50m_800M
+meta-tiered-imagenet_mocov3_vit_fs-centroid_5y2s18q_100m_400M
+meta-tiered-imagenet_mocov3_vit_fs-centroid_5y3s27q_150m_267M
+meta-tiered-imagenet_mocov3_vit_fs-centroid_5y4s36q_200m_200M

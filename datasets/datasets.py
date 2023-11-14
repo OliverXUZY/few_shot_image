@@ -5,7 +5,7 @@ from torch.utils.data import Sampler
 import numpy as np
 
 
-DEFAULT_ROOT = '../datasets'
+DEFAULT_ROOT = '/srv/home/zxu444/datasets'
 datasets = {}
 
 def register(name):

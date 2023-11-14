@@ -1,10 +1,11 @@
 dataset: meta-mini-imagenet
 train_set_args: 
   split: meta-train
+  # split: meta_train_limited_class32
   size: 224           # added for ViT
   transform: clip
-  n_batch: 200
-  n_episode: 1
+  n_batch: 100
+  n_episode: 2
   n_way: 15
   n_shot: 1
   n_query: 9
@@ -13,8 +14,8 @@ val_set_args:
   split: meta-val
   size: 224           # added for ViT
   transform: clip
-  n_batch: 200
-  n_episode: 1
+  n_batch: 100
+  n_episode: 2
   n_way: 15
   n_shot: 1
   n_query: 10
@@ -54,11 +55,11 @@ optimizer_args:
 # save_path: ./save/task_samples/task5000
 
 ########### M,m trend
-save_path: ./save/mini-imagenet/Mm_trend
+save_path: ./save/clip/mini-imagenet/Mm_trend
 # save_path: ./save/mini-imagenet/original  # only for testing time
 
 
-save_epoch: 5
+save_epoch: 1
 V: 1
 n_epochs: 10
 

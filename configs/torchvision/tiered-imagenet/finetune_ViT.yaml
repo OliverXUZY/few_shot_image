@@ -4,8 +4,8 @@ train_set_args:
   size: 224           
   transform: dinov2
   val_transform: dinov2
-  n_batch: 200
-  n_episode: 1
+  n_batch: 100
+  n_episode: 2
   n_way: 15
   n_shot: 1
   n_query: 9
@@ -15,8 +15,8 @@ val_set_args:
   size: 224           
   transform: make_classification_eval_transform
   val_transform: make_classification_eval_transform
-  n_batch: 200
-  n_episode: 1
+  n_batch: 20
+  n_episode: 2
   n_way: 15
   n_shot: 1
   n_query: 10
@@ -40,9 +40,9 @@ optimizer_args:
   weight_decay: 5.e-6
 
 
-save_path: ./save/torchvision/tiered-imagenet/Mm_trend
+save_path: ./save/torchvision/tiered-imagenet/limited_class
 
-save_epoch: 5
+save_epoch: 1
 V: 1
 n_epochs: 10
 

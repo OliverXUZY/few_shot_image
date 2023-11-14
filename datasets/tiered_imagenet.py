@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 @register('tiered-imagenet')
 class TieredImageNet(Dataset):
-  def __init__(self, root, split='train', size=84, n_view=1, transform=None, limited_class = None):
+  def __init__(self, root, split='train', size=84, n_view=1, transform=None):
     """
     Args:
       root (str): root path of dataset.
@@ -57,18 +57,6 @@ class TieredImageNet(Dataset):
     self.data = data
     self.label = new_label
     self.n_class = len(label_key)
-
-    ##
-    if limited_class:
-      if isinstance(limited_class, float):
-        if limited_class >= 1:
-          num_classes = limited_class
-        else:
-          num_classes = int(self.n_class*limited_class)
-      else:
-        raise ValueError("limited_class is none, but is neither an integer nor a float")
-      self.n_class = np.random.choice(self.n_class, num_classes, replace=False)
-    print("limited accessed classes to {}".format(self.n_class))
 
     self.statistics = {'mean': [0.485, 0.456, 0.406],
                        'std': [0.229, 0.224, 0.225]}
@@ -126,6 +114,18 @@ class MetaTieredImageNet(TieredImageNet):
     self.catlocs = tuple()
     for cat in range(self.n_class):
       self.catlocs += (np.argwhere(self.label == cat).reshape(-1),)
+    
+    ##
+    if limited_class:
+      if isinstance(limited_class, float):
+        if limited_class >= 1:
+          num_classes = int(limited_class)
+        else:
+          num_classes = int(self.n_class*limited_class)
+      else:
+        raise ValueError("limited_class is none, but is neither an integer nor a float")
+      self.n_class = np.random.choice(self.n_class, num_classes, replace=False)
+    print("limited accessed classes to {}".format(self.n_class))
 
     self.val_transform = get_transform(val_transform, size, self.statistics)
 
@@ -141,7 +141,10 @@ class MetaTieredImageNet(TieredImageNet):
     sv, qv = self.n_shot_view, self.n_query_view
     shot, query = tuple(), tuple()
     
-    cats = np.random.choice(self.n_class, self.n_way, replace=False)
+    replace =  False
+    if not isinstance(self.n_class, int) and len(self.n_class) < self.n_way:
+      replace = True
+    cats = np.random.choice(self.n_class, self.n_way, replace=replace)
     for c in cats:
       idx = np.random.choice(self.catlocs[c], sv * s + qv * q, replace=False)
       s_idx, q_idx = idx[:sv * s], idx[-qv * q:]

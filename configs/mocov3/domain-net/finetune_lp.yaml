@@ -31,13 +31,12 @@ encoder_args:
   ckpt_path: ../pretrained_model/mocov3/vit-b-300ep.pth.tar
 
 
-LP: True
+LP: False
 
-# path: ./save/dinov2/tiered-imagenet/stdFT/meta-tiered-imagenet_dinov2_vitb14_lp_logistic_15y1s_150m_200M
-# path: ./save/mocov3/tiered-imagenet/stdFT/meta-tiered-imagenet_mocov3_vit_lp_logistic_15y1s_150m_200M
+path: ./save/mocov3/domain-net/stdFT/meta-domain-net_mocov3_vit_lp_logistic_15y1s_150m_200M
 
-# ckpt: lp_epoch-20.pth
-LP_FT: False
+ckpt: lp_epoch-10.pth
+LP_FT: True
 
 
 classifier: fs-centroid

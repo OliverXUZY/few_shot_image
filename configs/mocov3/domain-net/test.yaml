@@ -12,18 +12,26 @@ test_set_args:
 
 
 ### encoder
-encoder: mocov3_vit
+# encoder: mocov3_vit
+# encoder_args: 
+#   # arch: vit_small
+#   # ckpt_path: ../pretrained_model/mocov3/vit-s-300ep.pth.tar
+#   arch: vit_base
+#   ckpt_path: ../pretrained_model/mocov3/vit-b-300ep.pth.tar
+
+encoder: mocov3_RN50
 encoder_args: 
-  # arch: vit_small
-  # ckpt_path: ../pretrained_model/mocov3/vit-s-300ep.pth.tar
-  arch: vit_base
-  ckpt_path: ../pretrained_model/mocov3/vit-b-300ep.pth.tar
+  ckpt_path: ../pretrained_model/mocov3/r-50-300ep.pth.tar
 
-# path: ./save/mocov3/tiered-imagenet/Mm_trend/meta-tiered-imagenet_mocov3_vit_fs-centroid_15y1s_150m_200M
-# path: ./save/mocov3/tiered-imagenet/stdFT/meta-tiered-imagenet_mocov3_vit_lp_logistic_15y1s_150m_200M
+# path: ./save/mocov3/domain-net/Mm_trend/meta-domain-net_mocov3_vit_fs-centroid_15y1s_150m_200M
+# path: save/mocov3/mini-imagenet/Mm_trend/meta-mini-imagenet_mocov3_vit_fs-centroid_15y1s_150m_200M
+# path: ./save/mocov3/domain-net/stdFT/meta-domain-net_mocov3_vit_lp_logistic_15y1s_150m_200M
 
-
-# ckpt: max-va.pth
+# RN50
+# path: ./save/mocov3/domain-net/Mm_trend/meta-domain-net_mocov3_RN50_fs-centroid_15y1s_150m_200M
+path: save/mocov3/mini-imagenet/Mm_trend/meta-mini-imagenet_mocov3_RN50_fs-centroid_15y1s_150m_200M
+# path: ./save/mocov3/domain-net/stdFT/meta-domain-net_mocov3_RN50_lp_logistic_15y1s_150m_200M
+ckpt: max-va.pth
 
 classifier: fs-centroid
 classifier_args:

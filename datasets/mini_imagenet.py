@@ -36,6 +36,10 @@ class MiniImageNet(Dataset):
     split_file = '{}/miniImageNet_category_split_{}.pickle'.format(root, split_tag)
     print(split_file)
 
+    self.replace = False
+    if 'limited_class8' in split_file:
+      self.replace = True
+
     # split_file = os.path.join(root, split_tag + '.pickle')
     assert os.path.isfile(split_file)
     with open(split_file, 'rb') as f:
@@ -127,7 +131,7 @@ class MetaMiniImageNet(MiniImageNet):
     sv, qv = self.n_shot_view, self.n_query_view
     shot, query = tuple(), tuple()
     
-    cats = np.random.choice(self.n_class, self.n_way, replace=False)
+    cats = np.random.choice(self.n_class, self.n_way, replace=self.replace)
     for c in cats:
       idx = np.random.choice(self.catlocs[c], sv * s + qv * q, replace=False)      # random choose n_shot*shot_view + n_query*query_view (1*1+15*1) images in each classes
       s_idx, q_idx = idx[:sv * s], idx[-qv * q:]
@@ -326,6 +330,7 @@ class VLMetaMiniImageNet(Dataset):
                  }
     split_tag = split_dict.get(split) or split
     split_dir = '{}/{}'.format(root, split_tag)
+    
     print(split_dir)
     assert os.path.isdir(split_dir)
     

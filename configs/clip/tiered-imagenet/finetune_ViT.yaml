@@ -53,12 +53,16 @@ optimizer_args:
 # save_path: ./save/task_samples/task5000
 
 ########### M,m trend
-save_path: ./save/clip/tiered-imagenet/Mm_trend
+# save_path: ./save/clip/tiered-imagenet/Mm_trend
 
 # save_path: ./save/clip/tiered-imagenet/stdFT
 
+# save_path: ./save/clip/tiered-imagenet/sample_complex
 
-save_epoch: 5
+save_path: ./save/clip/tiered-imagenet/limited_class
+
+
+save_epoch: 1
 V: 1
 n_epochs: 10
 

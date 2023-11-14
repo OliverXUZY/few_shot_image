@@ -52,6 +52,8 @@ def main(config):
   ##### Model #####
   if config.get('ckpt'):
     ckpt = torch.load(os.path.join(config['path'], config['ckpt']))
+    ckpt['encoder'] = config['encoder']
+    print("zhuoyan=====: ", ckpt['encoder'])
 
     ## add for testing train_head
     if ckpt.get('wrapper_state_dict'):
