@@ -52,7 +52,8 @@ def main(config):
   ##### Model #####
   if config.get('ckpt'):
     ckpt = torch.load(os.path.join(config['path'], config['ckpt']))
-    ckpt['encoder'] = config['encoder']
+    ckpt['encoder'] = config['encoder'] ## adding for MAML
+    ckpt['encoder_args'] = config.get('encoder_args') or dict() ## adding for MAML
     print("zhuoyan=====: ", ckpt['encoder'])
 
     ## add for testing train_head
@@ -80,6 +81,7 @@ def main(config):
       
       enc = wrapper
     else:
+      # print("zhuoyan: ckpt['encoder_state_dict']: ", ckpt['encoder_state_dict'])
       enc = encoders.load(ckpt)
   else:
     config['encoder_args'] = config.get('encoder_args') or dict()

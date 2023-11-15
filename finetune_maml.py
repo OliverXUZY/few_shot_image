@@ -79,7 +79,7 @@ def main(config):
   if config.get('path'):
     start_epoch_from = config.get('start_epoch_from') or 0
     utils.log("continue to tune {} from {}".format(config['encoder'], start_epoch_from))
-    assert os.path.exists(os.path.join(config['path'], config['ckpt']))
+    assert os.path.exists(os.path.join(config['path'], config['ckpt'])), f"Not exist!: {os.path.join(config['path'], config['ckpt'])}"
     ckpt = torch.load(os.path.join(config['path'], config['ckpt']))
     enc = encoders.load(ckpt)
   else:
@@ -101,8 +101,7 @@ def main(config):
   ################# lp for maml
   if config.get('lp_ckpt'):
     ### load LP, then finetuning the whole model
-    print("load lp ckpt from: ", os.path.join(config['lp_path'], config['lp_ckpt']))
-    assert os.path.exists(os.path.join(config['lp_path'], config['lp_ckpt']))
+    assert os.path.exists(os.path.join(config['lp_path'], config['lp_ckpt'])), f"Not exist!: {os.path.join(config['lp_path'], config['lp_ckpt'])}"
     ckpt = torch.load(os.path.join(config['lp_path'], config['lp_ckpt']))
     config['lp_args'] = ckpt.get('lp_args') or dict()
     config['lp_args']['in_dim'] = enc.get_out_dim()
